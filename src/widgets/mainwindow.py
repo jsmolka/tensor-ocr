@@ -9,7 +9,7 @@ class MainWindow(QWidget):
         QWidget.__init__(self, parent=parent)
         self._size = QSize()
 
-    def save_state(self):
+    def _save_state(self):
         """Saves the current window state."""
         settings = QSettings()
         settings.setValue("geometry", self.saveGeometry())
@@ -31,7 +31,7 @@ class MainWindow(QWidget):
 
     def closeEvent(self, event):
         """Overriden close event."""
-        self.save_state()
+        self._save_state()
         QWidget.closeEvent(self, event)
 
     def resizeEvent(self, event):

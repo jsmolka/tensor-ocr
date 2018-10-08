@@ -2,6 +2,3 @@
 *.pyc
 *.pyo
 *.pyd
-
-# User interface
-tensor.log
