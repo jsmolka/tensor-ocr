@@ -1,0 +1,28 @@
+TensorWidget {
+	background: rgb(56, 56, 56);
+}
+
+QLabel {
+    background: transparent;
+    border: 2px solid orange;
+}
+
+QTextEdit {
+    color: white;
+    background: transparent;
+    border: 2px solid orange;
+}
+
+QPushButton {
+    color: white;
+    background: transparent;
+    border: 2px solid orange;
+}
+
+QPushButton:hover {
+    background: rgb(80, 80, 80)
+}
+
+QPushButton:pressed {
+    background: rgb(68, 68, 68)
+}
