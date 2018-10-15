@@ -5,21 +5,22 @@ from traceback import format_exception
 from widgets.tensorwidget import TensorWidget
 
 
-def except_hook(*exc):
+def excepthook(*exc):
     """Global except hook."""
     print("".join(format_exception(*exc)))
     
 
 def main():
     """Main function."""
-    sys.excepthook = except_hook
+    sys.excepthook = excepthook
 
     app = QApplication(sys.argv)
+    # Needed for QSettings to work.
     app.setApplicationName("tensor-ocr")
     app.setOrganizationName("tensor-ocr inc.")
     
-    widget = TensorWidget()
-    widget.show_saved_state()
+    tensor = TensorWidget()
+    tensor.show_saved_state()
     
     sys.exit(app.exec_())
 

@@ -10,14 +10,14 @@ class ImageLabel(QLabel):
         self._pixmap = QPixmap()
         self._path = ""
 
-    def set_path(self, path):
-        """Setter for path."""
+    def load(self, path):
+        """Loads the pixmap from a given path."""
         self._path = path
         self._pixmap = QPixmap(path)
         self._update()
         
     def path(self):
-        """Getter for path."""
+        """Path of the current pixmap."""
         return self._path
 
     def _scaled_pixmap(self):

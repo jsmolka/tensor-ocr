@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QFile, QTextStream, QSize, Qt
+from PyQt5.QtCore import QFile, QTextStream, QSize, Qt, QTextStream
 from PyQt5.QtWidgets import QHBoxLayout, QFileDialog, QPushButton, QSizePolicy, QTextEdit, QVBoxLayout
 from widgets.imagelabel import ImageLabel
 from widgets.mainwindow import MainWindow
@@ -8,7 +8,7 @@ class TensorWidget(MainWindow):
     def __init__(self, parent=None):
         """Constructor."""
         MainWindow.__init__(self, parent=parent)
-        self._label = ImageLabel(parent=self)
+        self._image = ImageLabel(parent=self)
         self._load = QPushButton(parent=self)
         self._convert = QPushButton(parent=self)
         self._save = QPushButton(parent=self)
@@ -35,16 +35,16 @@ class TensorWidget(MainWindow):
         self._save.setText("Save")
         self._text.setReadOnly(True)
 
+        self._image.setMinimumSize(QSize(130, 130))
         self._load.setMinimumSize(QSize(75, 33))
         self._convert.setMinimumSize(QSize(75, 33))
         self._save.setMinimumSize(QSize(75, 33))
-        self._label.setMinimumSize(QSize(130, 130))
         self._text.setMinimumSize(QSize(130, 130))
 
-        # Make sure that the label and the textbox are the same size.
-        policy = self._label.sizePolicy()
+        # Make sure that the image and the textbox are the same size.
+        policy = self._image.sizePolicy()
         policy.setHorizontalStretch(1)
-        self._label.setSizePolicy(policy)
+        self._image.setSizePolicy(policy)
         policy = self._text.sizePolicy()
         policy.setHorizontalStretch(1)
         self._text.setSizePolicy(policy)
@@ -58,7 +58,7 @@ class TensorWidget(MainWindow):
 
         hbox = QHBoxLayout()
         hbox.setSpacing(15)
-        hbox.addWidget(self._label)
+        hbox.addWidget(self._image)
         hbox.addLayout(vbox)
         hbox.addWidget(self._text)
         self.setLayout(hbox)
@@ -66,16 +66,28 @@ class TensorWidget(MainWindow):
     def _load_clicked(self):
         """Action performed on load clicked."""
         dialog = QFileDialog(parent=self)
-        dialog.setFileMode(QFileDialog.AnyFile)
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         dialog.setNameFilter("Images (*.png *.jpg *.jpeg)")
         if dialog.exec_():
-            self._label.set_path(dialog.selectedFiles()[0])
+            self._image.load(dialog.selectedFiles()[0])
 
     def _convert_clicked(self):
         """Action performed on convert clicked."""
         pass
 
+    def _save_text(self, path):
+        """Saves the text to a given path."""
+        qfile = QFile(path)
+        if qfile.open(QFile.WriteOnly):
+            stream = QTextStream(qfile)
+            stream << self._text.toPlainText()
+
     def _save_clicked(self):
         """Action performned on save clicked."""
-        pass
+        dialog = QFileDialog(parent=self)
+        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        dialog.setNameFilter("Text (*.txt)")
+        dialog.selectFile("text.txt")
+        if dialog.exec_():
+            self._save_text(dialog.selectedFiles()[0])
