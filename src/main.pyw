@@ -15,7 +15,7 @@ def main():
     sys.excepthook = excepthook
 
     app = QApplication(sys.argv)
-    # Needed for QSettings to work.
+    # Needed for QSettings to work
     app.setApplicationName("tensor-ocr")
     app.setOrganizationName("tensor-ocr inc.")
     

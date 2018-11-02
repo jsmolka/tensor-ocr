@@ -1,20 +1,53 @@
 import cv2
-import glob
 import numpy as np
-from os.path import basename, exists, join, splitext
+from glob import iglob
+from os.path import basename, join, splitext
 
-from iam_classes import WordLineData
+
+class WordLineData:
+    def __init__(self, line):
+        """Constructor."""
+        self.path = ""
+        self.ok = True
+        self.gray = 0
+        # Bounding box of x, y, width, height
+        self.x = self.y = 0
+        self.w = self.h = 0
+        self.grammar = ""
+        self.word = ""
+
+        self.valid = self._parse_line(line)
+
+    def _parse_line(self, line):
+        """Parses the line."""
+        parts = line.split(" ")
+        try:
+            self.path = parts[0]
+            self.ok = parts[1] == "ok"
+            self.gray = int(parts[2])
+            self.x = int(parts[3])
+            self.y = int(parts[4])
+            self.w = int(parts[5])
+            self.h = int(parts[6])
+            self.grammar = parts[7]
+            self.word = " ".join(parts[8:])
+        except ValueError as e:
+            return False
+
+        return True
 
 
 class IamReader:
-    def __init__(self, iam_dir):
-        self._dir = iam_dir
+    def __init__(self, src):
+        """Constructor."""
+        self._src = src
         self._data = {}
-        
-        self._read_words()
 
-    def _read_words(self):
-        with open(join(self._dir, "ascii", "words.txt"), "r") as words:
+        self._parse_words()
+
+    def _parse_words(self):
+        """Parses words.txt and writes it into a dictionary."""
+        with open(join(self._src, "ascii", "words.txt"), "r") as words:
             for line in words:
                 if line.startswith("#"):
                     continue
@@ -23,25 +56,24 @@ class IamReader:
                 if data.valid:
                     self._data[data.path] = data
 
-    @staticmethod
-    def _file_iter(path, pattern, recursive=True):
-        path = join(path, "**") if recursive else path
-        return glob.iglob(join(path, pattern), recursive=recursive)
-
-    @staticmethod
-    def _filename(path):
-        path = basename(path)
-        return splitext(path)[0]
-
     def data_iter(self):
-        for fl in self._file_iter(join(self._dir, "words"), "*.png"):
-            fn = self._filename(fl)
-            if fn in self._data:
-                try:
-                    img = cv2.imread(fl)
-                    res = cv2.resize(img, dsize=(128, 64), interpolation=cv2.INTER_CUBIC)
-                except BaseException:
-                    continue
+        """Creates an iterator for data and image."""
+        globber = join(self._src, "words", "**", "*.png")
+        for fl in iglob(globber, recursive=True):
+            # Convert the filename to match the one in words.txt
+            # Ex: C:/dir/picture.png -> picture
+            fn = basename(fl)
+            fn = splitext(fn)[0]
 
-                yield self._data[fn], res
+            if fn not in self._data:
+                continue
+
+            try:
+                img = cv2.imread(fl)
+                res = cv2.resize(img, dsize=(128, 64), interpolation=cv2.INTER_CUBIC)
+            except BaseException:
+                # Take care of corrupt files
+                continue
+
+            yield self._data[fn], res
     

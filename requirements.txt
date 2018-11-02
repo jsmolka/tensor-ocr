@@ -1,5 +1,5 @@
 # Install using "pip install -r requirements.txt"
-PyQt5==5.11.3
-h5py==2.8.0
-imageio==2.4.1
-numpy==1.15.2
+PyQt5
+numpy
+opencv-python
+tensorflow

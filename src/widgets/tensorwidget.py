@@ -41,7 +41,7 @@ class TensorWidget(MainWindow):
         self._save.setMinimumSize(QSize(75, 33))
         self._text.setMinimumSize(QSize(130, 130))
 
-        # Make sure that the image and the textbox are the same size.
+        # Make sure that the image and the textbox are the same size
         policy = self._image.sizePolicy()
         policy.setHorizontalStretch(1)
         self._image.setSizePolicy(policy)
