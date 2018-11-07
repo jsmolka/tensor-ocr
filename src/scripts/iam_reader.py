@@ -68,12 +68,11 @@ class IamReader:
             if fn not in self._data:
                 continue
 
-            try:
-                img = cv2.imread(fl, cv2.IMREAD_GRAYSCALE)
-                res = cv2.resize(img, dsize=(128, 64), interpolation=cv2.INTER_CUBIC)
-            except BaseException:
-                # Take care of corrupt files
+            img = cv2.imread(fl, cv2.IMREAD_GRAYSCALE)
+            
+            # Take care of corrupt images
+            if (img.shape[0] == 0 or img.shape[1] == 0):
                 continue
 
-            yield self._data[fn], res
+            yield self._data[fn], img
     
