@@ -71,7 +71,7 @@ class IamReader:
             img = cv2.imread(fl, cv2.IMREAD_GRAYSCALE)
             
             # Take care of corrupt images
-            if (img.shape[0] == 0 or img.shape[1] == 0):
+            if (img is None or img.shape[0] == 0 or img.shape[1] == 0):
                 continue
 
             yield self._data[fn], img
