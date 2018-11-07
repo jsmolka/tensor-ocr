@@ -69,7 +69,7 @@ class IamReader:
                 continue
 
             try:
-                img = cv2.imread(fl)
+                img = cv2.imread(fl, cv2.IMREAD_GRAYSCALE)
                 res = cv2.resize(img, dsize=(128, 64), interpolation=cv2.INTER_CUBIC)
             except BaseException:
                 # Take care of corrupt files
