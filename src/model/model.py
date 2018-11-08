@@ -3,7 +3,7 @@ import os
 import cv2
 import keras
 from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, LSTM, Flatten
+from keras.layers import Conv2D, MaxPooling2D, LSTM, Flatten, TimeDistributed
 from keras import backend as K
 from imageio import imread
 from os.path import join, split, splitext
@@ -50,10 +50,14 @@ train_x = train_x.astype('float32')
 train_y = train_y.astype('str')
 train_x /= 255
 
-model = Sequential()
-model.add(Conv2D(64, kernel_size=(3,3), activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=(2,2)))
-model.add(Conv2D(64, kernel_size=(3,3), activation='relu'))
-model.add(Conv2D(64, kernel_size=(2,2), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2,2)))
+cnn = Sequential()
+cnn.add(Conv2D(64, kernel_size=(3,3), activation='relu', input_shape=input_shape))
+cnn.add(MaxPooling2D(pool_size=(2,2)))
+cnn.add(Conv2D(64, kernel_size=(3,3), activation='relu'))
+cnn.add(Conv2D(64, kernel_size=(2,2), activation='relu'))
+cnn.add(MaxPooling2D(pool_size=(2,2)))
+cnn.add(Flatten())
 
+model = Sequential()
+model.add(TimeDistributed(cnn))
+model.add(LSTM(64))
