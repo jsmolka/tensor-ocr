@@ -3,7 +3,8 @@ import os
 import cv2
 import keras
 from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, LSTM, Flatten, TimeDistributed
+from keras.layers import (Conv2D, MaxPooling2D, LSTM, Flatten, 
+TimeDistributed, Activation, Dense, Input, Lambda)
 from keras import backend as K
 from imageio import imread
 from os.path import join, split, splitext
@@ -26,12 +27,17 @@ def load_iam_data(path, file_iter, size):
 
     return x, y
 
+def ctc_lambda(args):
+    pred_y, labels, input_length, label_length = args
+    pred_y = pred_y[:, 2:, :]
+    return K.ctc_batch_cost(labels, pred_y, input_length, label_length)
+
 src = input("Source dir: ")
 files = os.listdir(src)
 file_iter = iter(files)
 
-validate_x, validate_y = load_iam_data(src, file_iter, 5670)
-train_x, train_y = load_iam_data(src, file_iter, batch_size)
+validate_x, validate_y = load_iam_data(src, file_iter, 1000)
+train_x, train_y = load_iam_data(src, file_iter, 5000)
 
 if K.image_data_format() == 'channels_first':
     validate_x = validate_x.reshape(validate_x.shape[0], channels, cols, rows)
@@ -56,8 +62,35 @@ cnn.add(MaxPooling2D(pool_size=(2,2)))
 cnn.add(Conv2D(64, kernel_size=(3,3), activation='relu'))
 cnn.add(Conv2D(64, kernel_size=(2,2), activation='relu'))
 cnn.add(MaxPooling2D(pool_size=(2,2)))
+cnn.add(Conv2D(64, kernel_size=(2,2), activation='relu'))
+cnn.add(MaxPooling2D(pool_size=(2,2)))
 cnn.add(Flatten())
+cnn.add(Dense(32))
 
 model = Sequential()
 model.add(TimeDistributed(cnn))
 model.add(LSTM(64))
+model.add(LSTM(64))
+model.add(Dense(78, kernel_initializer='he_normal'))
+model.add(Activation('softmax'))
+
+labels = Input(shape=[32], dtype='float32')
+input_length = Input(shape=[1], dtype='int64')
+label_length = Input(shape=[1], dtype='int64')
+
+model.add(Lambda(ctc_lambda, output_shape=(1,), arguments=[model, labels, input_length, label_length]))
+# K.ctc_batch_cost
+# K.ctc_decode
+
+# dummy loss function
+model.compile(loss={}, optimizer=keras.optimizers.sgd, metrics=['accuracy'])
+
+model.fit(train_x, train_y,
+          batch_size=batch_size,
+          epochs=epochs,
+          verbose=1,
+          validation_data=(validate_x, validate_y))
+
+score = model.evaluate(validate_x, validate_y, verbose=0)
+print('Test loss:', score[0])
+print('Test accuracy:', score[1])
