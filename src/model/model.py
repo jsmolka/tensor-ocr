@@ -6,7 +6,6 @@ from keras.models import Sequential
 from keras.layers import (Conv2D, MaxPooling2D, LSTM, Flatten, 
 TimeDistributed, Activation, Dense, Input, Lambda)
 from keras import backend as K
-from imageio import imread
 from os.path import join, split, splitext
 
 batch_size = 128
@@ -41,8 +40,8 @@ src = input("Source dir: ")
 files = os.listdir(src)
 file_iter = iter(files)
 
-validate_x, validate_y = load_iam_data(src, file_iter, 1000)
-train_x, train_y = load_iam_data(src, file_iter, 5000)
+validate_x, validate_y = load_iam_data(src, file_iter, 100)
+train_x, train_y = load_iam_data(src, file_iter, 500)
 
 if K.image_data_format() == 'channels_first':
     validate_x = validate_x.reshape(validate_x.shape[0], channels, rows, cols)
@@ -85,13 +84,9 @@ label_length = Input(shape=[1], dtype='int64')
 
 model.add(Lambda(ctc_lambda, output_shape=(1,), arguments=[model, labels, input_length, label_length]))
 
-model.compile(loss={}, optimizer=keras.optimizers.sgd, metrics=['accuracy'])
+model.compile(loss={}, optimizer='sgd', metrics=['accuracy'])
 
-model.fit(train_x, train_y,
-          batch_size=batch_size,
-          epochs=epochs,
-          verbose=1,
-          validation_data=(validate_x, validate_y))
+model.fit(train_x, train_y, batch_size=batch_size, epochs=epochs, verbose=1, validation_data=(validate_x, validate_y))
 
 score = model.evaluate(validate_x, validate_y, verbose=0)
 print('Test loss:', score[0])
