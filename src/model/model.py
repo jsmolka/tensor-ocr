@@ -12,17 +12,24 @@ from os.path import join, split, splitext
 batch_size = 128
 epochs = 5
 rows, cols = 128, 64
-channels = 3
+channels = 1
 
 
 def load_iam_data(path, file_iter, size):
     """Parses images into numpy arrays."""
-    x = np.ndarray(shape=(size, cols, rows, channels))
+    # x = np.ndarray(shape=(size, cols, rows, channels))
+    # new_x = np.ndarray(shape=(size, rows, cols))
+    x = np.ndarray(shape=(size, rows, cols))
     y = np.ndarray(shape=(size), dtype=object)
 
     for i in range(0, size):
         fi = next(file_iter)
-        x[i] = cv2.imread(join(path, fi))
+        tmp = cv2.imread(join(path, fi))
+        tmp = tmp.reshape(rows, cols, 3)
+
+        for j, row in enumerate(tmp):
+            for k, col in enumerate(row):
+                x[i][j][k] = col[2]
         y[i] = str(fi)[7:-4]
 
     return x, y
@@ -40,13 +47,13 @@ validate_x, validate_y = load_iam_data(src, file_iter, 1000)
 train_x, train_y = load_iam_data(src, file_iter, 5000)
 
 if K.image_data_format() == 'channels_first':
-    validate_x = validate_x.reshape(validate_x.shape[0], channels, cols, rows)
-    train_x = train_x.reshape(train_x.shape[0], channels, cols, rows)
-    input_shape = (channels, cols, rows)
+    validate_x = validate_x.reshape(validate_x.shape[0], channels, rows, cols)
+    train_x = train_x.reshape(train_x.shape[0], channels, rows, cols)
+    input_shape = (channels, rows, cols)
 else:
-    validate_x = validate_x.reshape(validate_x.shape[0], cols, rows, channels)
-    train_x = train_x.reshape(train_x.shape[0], cols, rows, channels)
-    input_shape = (cols, rows, channels)
+    validate_x = validate_x.reshape(validate_x.shape[0], rows, cols, channels)
+    train_x = train_x.reshape(train_x.shape[0], rows, cols, channels)
+    input_shape = (rows, cols, channels)
 
 validate_x = validate_x.astype('float32')
 validate_y = validate_y.astype('str')
