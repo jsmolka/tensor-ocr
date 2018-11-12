@@ -17,8 +17,6 @@ channels = 1
 
 def load_iam_data(path, file_iter, size):
     """Parses images into numpy arrays."""
-    # x = np.ndarray(shape=(size, cols, rows, channels))
-    # new_x = np.ndarray(shape=(size, rows, cols))
     x = np.ndarray(shape=(size, rows, cols))
     y = np.ndarray(shape=(size), dtype=object)
 
@@ -86,10 +84,7 @@ input_length = Input(shape=[1], dtype='int64')
 label_length = Input(shape=[1], dtype='int64')
 
 model.add(Lambda(ctc_lambda, output_shape=(1,), arguments=[model, labels, input_length, label_length]))
-# K.ctc_batch_cost
-# K.ctc_decode
 
-# dummy loss function
 model.compile(loss={}, optimizer=keras.optimizers.sgd, metrics=['accuracy'])
 
 model.fit(train_x, train_y,
