@@ -45,6 +45,8 @@ file_iter = iter(files)
 validate_x, validate_y = load_iam_data(src, file_iter, 1000)
 train_x, train_y = load_iam_data(src, file_iter, 20000)
 
+train_x_input_length = np.full(shape=(20000), fill_value=30, dtype=int)
+
 if K.image_data_format() == 'channels_first':
     validate_x = validate_x.reshape(validate_x.shape[0], channels, rows, cols)
     train_x = train_x.reshape(train_x.shape[0], channels, rows, cols)
@@ -63,6 +65,7 @@ validate_x /= 255
 train_x = train_x.astype('float32')
 train_y = train_y.astype('str')
 train_x /= 255
+train_y_length = [len(y) for y in train_y]
 
 input_shape = (None, rows, cols, channels)
 input_data = Input(name="input_data", shape=input_shape)
@@ -94,6 +97,9 @@ loss_output = Lambda(ctc_lambda, output_shape=(1,), name='ctc')([predict_y, labe
 
 model = Model(inputs=[input_data, labels, input_length, label_length], outputs=loss_output)
 
-model.compile(loss={'ctc': lambda true_y, predict_y: predict_y}, optimizer='sgd')
+model.compile(loss={'ctc': lambda train_y, predict_y: predict_y}, optimizer='sgd')
 model.summary()
 
+# model.fit([train_x, train_y, train_x_input_length, train_y_length], train_y)
+output = np.ndarray(shape=20000)
+model.fit([train_x, train_y, None, None], output)
