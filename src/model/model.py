@@ -32,21 +32,6 @@ label_max_length = 32
 def load_iam_data(path, file_iter, size):
     """Parses images into numpy arrays."""
     x = np.ndarray(shape=(size, rows, cols))
-    y = np.ndarray(shape=(size), dtype=object)
-
-    for i in range(0, size):
-        fi = next(file_iter)
-
-        tmp = cv2.imread(join(path, fi), cv2.IMREAD_GRAYSCALE)
-        tmp = tmp.reshape(rows, cols)
-
-        y[i] = str(fi)[7:-4]
-    return x, y
-
-
-def load_iam_data_onehot(path, file_iter, size):
-    """Parses images into numpy arrays."""
-    x = np.ndarray(shape=(size, rows, cols))
     y = np.ones(shape=(size, label_max_length)) * (alphabet_size+1)
 
     for i in range(0, size):
@@ -86,8 +71,8 @@ src = input("Source dir: ")
 files = os.listdir(src)
 file_iter = iter(files)
 
-validate_x, validate_y = load_iam_data_onehot(src, file_iter, validate_size)
-train_x, train_y = load_iam_data_onehot(src, file_iter, train_size)
+validate_x, validate_y = load_iam_data(src, file_iter, validate_size)
+train_x, train_y = load_iam_data(src, file_iter, train_size)
 
 train_x_input_length = np.full(shape=(train_size), fill_value=30, dtype=int)
 
@@ -101,11 +86,9 @@ else:
     input_shape = (rows, cols, channels)
 
 validate_x = validate_x.astype('float32')
-validate_y = validate_y.astype('str')
 validate_x /= 255
 
 train_x = train_x.astype('float32')
-train_y = train_y.astype('str')
 train_x /= 255
 
 train_y_length = np.ndarray(shape=(train_size))
@@ -136,13 +119,11 @@ input_length = Input(shape=[1], dtype='int64', name='input_length')
 label_length = Input(shape=[1], dtype='int64', name='label_length')
 
 loss_output = Lambda(ctc_lambda, output_shape=(1,), name='ctc')([predict_y, labels, input_length, label_length])
-
 model = Model(inputs=[input_data, labels, input_length, label_length], outputs=loss_output)
 
 model.compile(loss={'ctc': lambda train_y, predict_y: predict_y}, optimizer='sgd')
 model.summary()
 
 output = np.ndarray(shape=train_size)
-
 
 model.fit([train_x, train_y, train_x_input_length, train_y_length], output)
