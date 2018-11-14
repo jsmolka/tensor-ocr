@@ -23,13 +23,14 @@ batch_size = 128
 epochs = 5
 rows, cols = 128, 64
 channels = 1
-alphabet_size = 78
+alphabet =  " !\"#&'()*+,-./0123456789:;?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+alphabet_size = len(alphabet)
 label_max_length = 32
 
 def load_iam_data(path, file_iter, size):
     """Parses images into numpy arrays."""
     x = np.ndarray(shape=(size, rows, cols))
-    y = np.ndarray(shape=(size), dtype=object)
+    y = np.ndarray(shape=(size, label_max_length), dtype='int32')
 
     for i in range(0, size):
         fi = next(file_iter)
@@ -37,14 +38,29 @@ def load_iam_data(path, file_iter, size):
         tmp = cv2.imread(join(path, fi), cv2.IMREAD_GRAYSCALE)
         tmp = tmp.reshape(rows, cols)
 
-        y[i] = str(fi)[7:-4]
-
+        y[i] = encode_onehot(str(fi)[7:-4])
     return x, y
 
 def ctc_lambda(args):
     predict_y, labels, input_length, label_length = args
     predict_y = predict_y[:, 2:, :]
     return K.ctc_batch_cost(labels, predict_y, input_length, label_length)
+
+def encode_onehot(word):
+    onehot = np.ndarray(shape=(len(word)), dtype='int32')
+    for i in range(0, len(word)):
+        for j in range(0, alphabet_size):
+            if word[i] == alphabet[j]:
+                onehot[i] = j
+                break
+    return onehot
+
+def decode_onehot(onehot):
+    word = []
+    for i in range(0, len(onehot)):
+        word.append(alphabet[onehot[i]])
+    word = ''.join(word)
+    return word
 
 src = input("Source dir: ")
 files = os.listdir(src)
@@ -119,5 +135,8 @@ print(train_y.shape)
 print(train_x_input_length.shape)
 print(train_y_length.shape)
 
-model.fit([train_x, train_y, train_x_input_length, train_y_length], output)
+print(encode_onehot("Hallo Welt"))
+print(decode_onehot([0, 1, 2, 23, 45]))
+
+# model.fit([train_x, train_y, train_x_input_length, train_y_length], output)
 
