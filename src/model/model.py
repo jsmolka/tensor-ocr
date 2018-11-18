@@ -32,15 +32,15 @@ label_max_length = 32
 def load_iam_data(path, file_iter, size):
     """Parses images into numpy arrays."""
     x = np.ndarray(shape=(size, rows, cols))
-    y = np.ones(shape=(size, label_max_length)) * (alphabet_size+1)
+    y = np.ones(shape=[size, label_max_length]) * alphabet_size
 
     for i in range(0, size):
         fi = next(file_iter)
 
         tmp = cv2.imread(join(path, fi), cv2.IMREAD_GRAYSCALE)
         tmp = tmp.reshape(rows, cols)
-
-        y[i] = encode_onehot(str(fi)[7:-4])
+        word = str(fi)[7:-4]
+        y[i, 0:len(word)] = encode_onehot(word)
     return x, y
 
 
@@ -51,11 +51,11 @@ def ctc_lambda(args):
 
 
 def encode_onehot(word):
-    onehot = np.ones(shape=(label_max_length)) * (alphabet_size+1)
+    onehot = []
     for i in range(0, len(word)):
         for j in range(0, alphabet_size):
             if word[i] == alphabet[j]:
-                onehot[i] = j
+                onehot.append(j)
                 break
     return onehot
 
@@ -63,7 +63,10 @@ def encode_onehot(word):
 def decode_onehot(onehot):
     word = []
     for i in range(0, len(onehot)):
-        word.append(alphabet[onehot[i]])
+        if onehot[i] == alphabet_size:
+            word.append("")
+        else:
+            word.append(alphabet[onehot[i]])
     word = ''.join(word)
     return word
 
