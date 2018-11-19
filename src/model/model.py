@@ -141,3 +141,4 @@ model.summary()
 output = np.ndarray(shape=train_size)
 # train model
 model.fit([train_x, train_y, input_length_x, label_length_y], output)
+model.save('model.h5')
