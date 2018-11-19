@@ -10,8 +10,8 @@ from keras.optimizers import SGD
 from keras import backend as K
 from os.path import join
 
-train_size = 2000
-validate_size = 100
+train_size = 108000
+validate_size = 5000
 cnn_size = 16
 rnn_size = 512
 dense_size = 32
@@ -19,7 +19,7 @@ kernel_size = (3, 3)
 pool_size = 2
 
 batch_size = 128
-epochs = 5
+epochs = 1
 rows, cols = 128, 64
 channels = 1
 alphabet = (" !\"#&'()*+,-./0123456789:;?"
@@ -36,10 +36,12 @@ def load_iam_data(path, file_iter, size):
 
     for i in range(0, size):
         fi = next(file_iter)
+        word = str(fi)[7:-4]
+        if len(word) >= 32:
+            continue
 
         tmp = cv2.imread(join(path, fi), cv2.IMREAD_GRAYSCALE)
-        tmp = tmp.reshape(rows, cols)
-        word = str(fi)[7:-4]
+        x[i] = tmp.reshape(rows, cols)
         y[i, 0:len(word)] = encode_label(word)
     return x, y
 
@@ -83,8 +85,15 @@ train_x, train_y = load_iam_data(src, file_iter, train_size)
 
 input_length_x = np.full(shape=(train_size), fill_value=32, dtype=int)
 label_length_y = np.ndarray(shape=(train_size))
+
+input_length_validate_x = np.full(shape=(validate_size), fill_value=32, dtype=int)
+label_length_validate_y = np.ndarray(shape=(validate_size))
+
 for i, item in enumerate(train_y):
     label_length_y[i] = len(item)
+
+for i, item in enumerate(validate_y):
+    label_length_validate_y[i] = len(item)
 
 if K.image_data_format() == 'channels_first':
     validate_x = validate_x.reshape(validate_x.shape[0], channels, rows, cols)
@@ -135,10 +144,17 @@ loss_output = Lambda(ctc_lambda, output_shape=(1,), name='ctc')([predict_y, labe
 model = Model(inputs=[input_data, labels, input_length, label_length], outputs=loss_output)
 
 # specify loss function(CTC) and optimizer
-model.compile(loss={'ctc': lambda train_y, predict_y: predict_y}, optimizer='sgd')
+model.compile(loss={'ctc': lambda train_y, predict_y: predict_y}, optimizer='sgd', metrics=['accuracy'])
 model.summary()
 
 output = np.ndarray(shape=train_size)
+validate_output = np.ndarray(shape=validate_size)
+
 # train model
-model.fit([train_x, train_y, input_length_x, label_length_y], output)
-model.save('model.h5')
+model.fit([train_x, train_y, input_length_x, label_length_y], output, 
+          epochs=epochs,
+          verbose=1,
+          validation_data=([validate_x, validate_y, input_length_validate_x, label_length_validate_y], validate_y))
+
+# print(K.ctc_decode(predict_y, input_length, greedy=True))
+# model.save('model.h5')
