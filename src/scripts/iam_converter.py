@@ -42,7 +42,7 @@ def main():
         try:
             # Ignore words with reserved Windows characters.
             skip = False
-            for reserved in (":", "\n", "/", "\\", "|", "?", "*"):
+            for reserved in ("<", ">", ":", "/", "\\", "|", "?", "*"):
                 if reserved in data.word:
                     skip = True
                     break
