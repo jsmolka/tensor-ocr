@@ -40,7 +40,7 @@ def load_iam_data(path, file_iter, size):
         tmp = cv2.imread(join(path, fi), cv2.IMREAD_GRAYSCALE)
         tmp = tmp.reshape(rows, cols)
         word = str(fi)[7:-4]
-        y[i, 0:len(word)] = encode_onehot(word)
+        y[i, 0:len(word)] = encode_label(word)
     return x, y
 
 
@@ -50,7 +50,8 @@ def ctc_lambda(args):
     return K.ctc_batch_cost(labels, predict_y, input_length, label_length)
 
 
-def encode_onehot(word):
+def encode_label(word):
+    """Encodes a string into an array of it's characters positions in the alphabet."""
     onehot = []
     for i in range(0, len(word)):
         for j in range(0, alphabet_size):
@@ -60,10 +61,11 @@ def encode_onehot(word):
     return onehot
 
 
-def decode_onehot(onehot):
+def decode_label(onehot):
+    """Decodes an array of character positions into a string."""
     word = []
     for i in range(0, len(onehot)):
-        if onehot[i] == alphabet_size:
+        if onehot[i] == alphabet_size:  # CTC blank character
             word.append("")
         else:
             word.append(alphabet[onehot[i]])
@@ -74,10 +76,15 @@ src = input("Source dir: ")
 files = os.listdir(src)
 file_iter = iter(files)
 
+# validation data
 validate_x, validate_y = load_iam_data(src, file_iter, validate_size)
+# training data
 train_x, train_y = load_iam_data(src, file_iter, train_size)
 
-train_x_input_length = np.full(shape=(train_size), fill_value=30, dtype=int)
+input_length_x = np.full(shape=(train_size), fill_value=30, dtype=int)
+label_length_y = np.ndarray(shape=(train_size))
+for i, item in enumerate(train_y):
+    label_length_y[i] = len(item)
 
 if K.image_data_format() == 'channels_first':
     validate_x = validate_x.reshape(validate_x.shape[0], channels, rows, cols)
@@ -88,16 +95,13 @@ else:
     train_x = train_x.reshape(train_x.shape[0], rows, cols, channels)
     input_shape = (rows, cols, channels)
 
+# cast to intervall 0..1
 validate_x = validate_x.astype('float32')
 validate_x /= 255
-
 train_x = train_x.astype('float32')
 train_x /= 255
 
-train_y_length = np.ndarray(shape=(train_size))
-for i, item in enumerate(train_y):
-    train_y_length[i] = len(item)
-
+# create model with multiple inputs
 input_data = Input(name="input_data", shape=input_shape, dtype='float32')
 model = Conv2D(cnn_size, kernel_size=kernel_size, activation='relu', kernel_initializer='he_normal')(input_data)
 model = MaxPooling2D(pool_size=(pool_size, pool_size))(model)
@@ -117,16 +121,23 @@ gru_2b = GRU(rnn_size, return_sequences=True, kernel_initializer='he_normal', go
 model = Dense(alphabet_size+1, kernel_initializer='he_normal', name='dense2')(concatenate([gru_2, gru_2b]))
 predict_y = Activation('softmax', name='predict_y')(model)
 
+# the encoded strings: train_y
 labels = Input(shape=[label_max_length], dtype='float32', name='labels')
+# input sequence length for CTC -> output sequence length of the previous layer
 input_length = Input(shape=[1], dtype='int64', name='input_length')
+# length of labels including whitespace[0, 2, 3, 20] -> 4
 label_length = Input(shape=[1], dtype='int64', name='label_length')
 
+# CTC loss function
 loss_output = Lambda(ctc_lambda, output_shape=(1,), name='ctc')([predict_y, labels, input_length, label_length])
+
+# specify input and output data
 model = Model(inputs=[input_data, labels, input_length, label_length], outputs=loss_output)
 
+# specify loss function(CTC) and optimizer
 model.compile(loss={'ctc': lambda train_y, predict_y: predict_y}, optimizer='sgd')
 model.summary()
 
 output = np.ndarray(shape=train_size)
-
-model.fit([train_x, train_y, train_x_input_length, train_y_length], output)
+# train model
+model.fit([train_x, train_y, input_length_x, label_length_y], output)
