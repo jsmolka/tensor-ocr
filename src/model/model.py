@@ -46,7 +46,7 @@ def load_iam_data(path, file_iter, size):
 
 def ctc_lambda(args):
     predict_y, labels, input_length, label_length = args
-    predict_y = predict_y[:, 2:, :]
+    # predict_y = predict_y[:, 2:, :]
     return K.ctc_batch_cost(labels, predict_y, input_length, label_length)
 
 
@@ -81,7 +81,7 @@ validate_x, validate_y = load_iam_data(src, file_iter, validate_size)
 # training data
 train_x, train_y = load_iam_data(src, file_iter, train_size)
 
-input_length_x = np.full(shape=(train_size), fill_value=30, dtype=int)
+input_length_x = np.full(shape=(train_size), fill_value=32, dtype=int)
 label_length_y = np.ndarray(shape=(train_size))
 for i, item in enumerate(train_y):
     label_length_y[i] = len(item)
