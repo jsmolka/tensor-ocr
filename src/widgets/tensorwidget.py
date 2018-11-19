@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QFile, QTextStream, QSize, Qt, QTextStream
 from PyQt5.QtWidgets import QHBoxLayout, QFileDialog, QPushButton, QSizePolicy, QTextEdit, QVBoxLayout
+
 from widgets.imagelabel import ImageLabel
 from widgets.mainwindow import MainWindow
 

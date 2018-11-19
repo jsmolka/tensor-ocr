@@ -1,8 +1,10 @@
-import resources
 import sys
 from PyQt5.QtWidgets import QApplication
 from traceback import format_exception
+
+import data.resources
 from widgets.tensorwidget import TensorWidget
+from widgets.util import *
 
 
 def excepthook(*exc):

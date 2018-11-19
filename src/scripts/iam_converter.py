@@ -40,6 +40,16 @@ def main():
     for data, img in reader.data_iter():
         height, width = img.shape
         try:
+            # Ignore words with reserved Windows characters.
+            skip = False
+            for reserved in (":", "\n", "/", "\\", "|", "?", "*"):
+                if reserved in data.word:
+                    skip = True
+                    break
+            
+            if skip:
+                continue
+
             # Resize short words using borders to prevent them from getting too
             # big. They still need to be resized afterwards because they might
             # not have the desired size.
