@@ -156,5 +156,8 @@ model.fit([train_x, train_y, input_length_x, label_length_y], output,
           verbose=1,
           validation_data=([validate_x, validate_y, input_length_validate_x, label_length_validate_y], validate_y))
 
-# print(K.ctc_decode(predict_y, input_length, greedy=True))
-# model.save('model.h5')
+# Save model
+with open("model.json", "w") as json_file:
+    json_file.write(model.to_json())
+
+model.save_weights("weights.h5")
