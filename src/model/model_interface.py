@@ -22,6 +22,9 @@ def load_img(path):
     img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     img = cv2.resize(img, (rows, cols))
 
+    img = img.astype('float32')
+    img /= 255
+
     return img
     
 
@@ -30,16 +33,25 @@ def main():
     model = load_model("model.json", "weights.h5")
 
     img = load_img(r"C:\Users\Julian\Desktop\parsed_data\000002-MOVE.png")
-    data = np.array([img], dtype=np.uint8)
-    data = data.reshape(128, 64, 1)
-
-    data = data.astype('float32')
-    data /= 255
     
-    print("data", data.shape)
+    # Todo: support other keras channel
+    data = np.array(img)
+    data = np.reshape(data, (1, 128, 64, 1))
+    
+    labels = np.ones(shape=(80, 32))
+    input_length = np.ones(shape=(1, 1))
+    label_length = np.ones(shape=(1, 1))
 
-    pred = model.predict(data, batch_size=128)
-    print("pred", pred)
+    model.outputs = [model.get_layer("predict_y").output]  # Softmax layer output
+    pred = model.predict([data, labels, input_length, label_length])
+
+    print("Prediction shape:", pred.shape)
+    print(pred.shape)
+    pred = pred[0]
+    for i in range(pred.shape[0]):
+        # index = np.argmax(pred[i])
+        print(pred[i][-1])
+
 
 
 if __name__ == "__main__":
