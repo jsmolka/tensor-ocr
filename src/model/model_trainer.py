@@ -13,8 +13,8 @@ from os.path import join, basename
 img_w = 128
 img_h = 64
 
-train_size = 2000
-valid_size = 200
+train_size = 50000
+valid_size = 5000
 conv_size = 16
 rnn_size = 512
 dense_size = 32
@@ -148,41 +148,19 @@ def train():
     )
 
     # Save model
-    # with open("model.json", "w") as json_file:
-    #     json_file.write(model.to_json())
-    # model.save_weights("weights.h5")
+    with open("model.json", "w") as json_file:
+        json_file.write(model.to_json())
+    model.save_weights("weights.h5")
 
     
-    ##########################
-    # Test the created model #
-    ##########################
-
-    test_cases = 5
-
     # Remove the extra input layers from the model and transfer the weights
     stripped = Model(inputs=input_data, outputs=y_pred)
     for idx, layer in enumerate(model.layers[:-4]):
         stripped.layers[idx].set_weights(layer.get_weights())
 
-    stripped_data = []
-    for t in x_train[:test_cases]:
-        pred = stripped.predict(np.array([t]))
-        word = [np.argmax(x) for x in pred[0]]
-        stripped_data.append(word)
-        print(word)
-
-    # Compare to original model
-    original_data = []
-    for t in x_train[:test_cases]:
-        model.outputs = [model.get_layer("y_pred").output]
-        pred = model.predict([np.array([t]), y_train, input_length_x, label_length_y])
-        word = [np.argmax(x) for x in pred[0]]
-        original_data.append(word)
-
-    if stripped_data != original_data:
-        print("Data between stripped and original model differs.")
-        for data in original_data:
-            print(data)
+    with open("model.json", "w") as json_file:
+            json_file.write(stripped.to_json())
+    stripped.save_weights("weights.h5")
 
 
 if __name__ == "__main__":

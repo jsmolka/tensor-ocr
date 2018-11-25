@@ -33,33 +33,30 @@ def load_img(path):
     img = img.astype('float32')
     img /= 255
     img = np.expand_dims(img.T, axis=2)
+
     return img
     
 
 def main():
     """Main function."""
-    model = load_model("model.json", "weights.h5")
+    model = load_model("model_s.json", "weights_s.h5")
 
-    img = load_img(r"C:\Users\Julian\Desktop\parsed_data\000463-Parties.png")
+    img = load_img(r"C:\Users\Julian\Desktop\parsed_data\000215-that.png")
     
     # Todo: support other keras channel, like in model
     data = np.array([img])
     # data = np.reshape(data, (1, img_w, img_h, 1))
     print(data.shape)
 
-    labels = np.ones(shape=(80, 32))
-    input_length = np.ones(shape=(1, 1))
-    label_length = np.ones(shape=(1, 1))
-
-    model.outputs = [model.get_layer("y_pred").output]  # Softmax layer output
-    pred = model.predict([data, labels, input_length, label_length])
+    pred = model.predict(data)
 
     print("Prediction shape:", pred.shape)
     print(pred.shape)
-    pred = pred[1]
+    pred = pred[0]
     for i in range(pred.shape[0]):
         index = np.argmax(pred[i])
-        print(pred[i])
+        if index < alphabet_size:
+            print(alphabet[index])
 
 
 
