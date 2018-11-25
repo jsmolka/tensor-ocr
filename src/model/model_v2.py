@@ -12,8 +12,8 @@ from os.path import join, basename
 img_w = 128
 img_h = 64
 
-train_size = 108000
-valid_size = 5000
+train_size = 2000
+valid_size = 200
 conv_size = 16
 rnn_size = 512
 dense_size = 32
@@ -61,6 +61,7 @@ def ctc_lambda(args):
 
 def train():
     """Trains and saves the model."""
+    # Load and shape the training and validation data
     globber = iglob(join(input("IAM data dir: "), "*.png"))
     x_train, y_train = load_iam_data(globber, train_size)
     x_valid, y_valid = load_iam_data(globber, valid_size)
@@ -69,9 +70,9 @@ def train():
     x_valid = x_valid.astype("float32") / 255
 
     if K.image_data_format() == "channels_first":
-        input_shape = (channels, img_h, img_w)
+        input_shape = (channels, img_w, img_h)
     else:
-        input_shape = (img_h, img_w, channels)
+        input_shape = (img_w, img_h, channels)
 
     reshape = lambda array: array.reshape(array.shape[0], *input_shape)
     x_train = reshape(x_train)
@@ -91,16 +92,15 @@ def train():
 
     # Create the model using different layers
     input_data = Input(name="input_data", shape=input_shape, dtype="float32")
-    inner = Conv2D(conv_size, kernel_size=kernel_size, activation="relu", kernel_initializer="he_normal", name="conv1")(input_data)
+    inner = Conv2D(conv_size, kernel_size=kernel_size, padding="same", activation="relu", kernel_initializer="he_normal", name="conv1")(input_data)
     inner = MaxPooling2D(pool_size=(pool_size, pool_size), name="max1")(inner)
-    inner = Conv2D(conv_size, kernel_size=kernel_size, activation="relu", kernel_initializer="he_normal", name="conv2")(inner)
+    inner = Conv2D(conv_size, kernel_size=kernel_size, padding="same", activation="relu", kernel_initializer="he_normal", name="conv2")(inner)
     inner = MaxPooling2D(pool_size=(pool_size, pool_size), name="max2")(inner)
 
-    conv_to_rnn_dims = (32, 210)
-
-    # Todo: corrent conversion? (210, 32)
-    # conv_to_rnn_dims = (img_w // (pool_size ** 2),
-    #                    (img_h // (pool_size ** 2)) * conv_filters)
+    conv_to_rnn_dims = (
+        img_w // (pool_size ** 2),
+        (img_h // (pool_size ** 2)) * conv_size
+    )
 
     inner = Reshape(target_shape=conv_to_rnn_dims, name="reshape")(inner)
     inner = Dense(dense_size, activation="relu", name="dense1")(inner)
