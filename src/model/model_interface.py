@@ -39,7 +39,7 @@ def load_img(path):
 
 def main():
     """Main function."""
-    model = load_model("model_s.json", "weights_s.h5")
+    model = load_model("model.json", "weights.h5")
 
     img = load_img(r"C:\Users\Julian\Desktop\parsed_data\000215-that.png")
     
