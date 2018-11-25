@@ -39,8 +39,8 @@ def main():
     data = np.reshape(data, (1, 128, 64, 1))
     
     labels = np.ones(shape=(80, 32))
-    input_length = np.ones(shape=(1, 1))
-    label_length = np.ones(shape=(1, 1))
+    input_length = np.ones(shape=(32, 1))
+    label_length = np.ones(shape=(32, 1))
 
     model.outputs = [model.get_layer("predict_y").output]  # Softmax layer output
     pred = model.predict([data, labels, input_length, label_length])
@@ -50,7 +50,7 @@ def main():
     pred = pred[0]
     for i in range(pred.shape[0]):
         # index = np.argmax(pred[i])
-        print(pred[i][-1])
+        print(pred[i])
 
 
 
