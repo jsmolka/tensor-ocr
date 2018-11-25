@@ -7,6 +7,7 @@ from keras.models import Sequential, Model
 from keras.layers import Activation, Conv2D, Dense, GRU, Input, Lambda, MaxPooling2D, Reshape
 from keras.layers.merge import add, concatenate
 from keras.optimizers import SGD
+from keras.utils import plot_model
 from os.path import join, basename
 
 img_w = 128
@@ -39,15 +40,15 @@ def encode_label(string):
 
 def load_iam_data(globber, size):
     """Parses image data into numpy arrays."""
-    x = np.ndarray(shape=(size, img_h, img_w))
-    y = np.ones(shape=(size, label_max_length)) * alphabet_size  # Todo: * alphabet_size???
+    x = np.ndarray(shape=(size, img_w, img_h))
+    y = np.full(shape=(size, label_max_length), fill_value=alphabet_size)
 
     for i in range(size):
         path = next(globber)
         word = str(basename(path))[7:-4]
         if len(word) <= label_max_length:
             img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-            x[i] = cv2.resize(img, (img_w, img_h))
+            x[i] = cv2.resize(img, (img_w, img_h)).T
             y[i, 0:len(word)] = encode_label(word)
 
     return x, y
@@ -56,6 +57,7 @@ def load_iam_data(globber, size):
 def ctc_lambda(args):
     """Lambda for CTC loss."""
     y_pred, labels, input_length, label_length = args
+    # y_pred = y_pred[:, 2:, :]
     return K.ctc_batch_cost(labels, y_pred, input_length, label_length)
 
 
@@ -75,8 +77,8 @@ def train():
         input_shape = (img_w, img_h, channels)
 
     reshape = lambda array: array.reshape(array.shape[0], *input_shape)
-    x_train = reshape(x_train)
-    x_valid = reshape(x_valid)
+    x_train = np.expand_dims(x_train, axis=3)
+    x_valid = np.expand_dims(x_valid, axis=3)
 
     input_length_x = np.full(shape=(train_size,), fill_value=32, dtype=int)
     label_length_y = np.ndarray(shape=(train_size,))
@@ -132,7 +134,7 @@ def train():
     sgd = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
 
     model = Model(inputs=[input_data, labels, input_length, label_length], outputs=loss_output)
-    model.compile(loss={"ctc": lambda y_true, y_pred: y_pred}, optimizer=sgd, metrics=["accuracy"])
+    model.compile(loss={"ctc": lambda y_true, y_pred: y_pred}, optimizer=sgd)
 
     output = np.ndarray(shape=(train_size,))
 
@@ -146,9 +148,41 @@ def train():
     )
 
     # Save model
-    with open("model.json", "w") as json_file:
-        json_file.write(model.to_json())
-    model.save_weights("weights.h5")
+    # with open("model.json", "w") as json_file:
+    #     json_file.write(model.to_json())
+    # model.save_weights("weights.h5")
+
+    
+    ##########################
+    # Test the created model #
+    ##########################
+
+    test_cases = 5
+
+    # Remove the extra input layers from the model and transfer the weights
+    stripped = Model(inputs=input_data, outputs=y_pred)
+    for idx, layer in enumerate(model.layers[:-4]):
+        stripped.layers[idx].set_weights(layer.get_weights())
+
+    stripped_data = []
+    for t in x_train[:test_cases]:
+        pred = stripped.predict(np.array([t]))
+        word = [np.argmax(x) for x in pred[0]]
+        stripped_data.append(word)
+        print(word)
+
+    # Compare to original model
+    original_data = []
+    for t in x_train[:test_cases]:
+        model.outputs = [model.get_layer("y_pred").output]
+        pred = model.predict([np.array([t]), y_train, input_length_x, label_length_y])
+        word = [np.argmax(x) for x in pred[0]]
+        original_data.append(word)
+
+    if stripped_data != original_data:
+        print("Data between stripped and original model differs.")
+        for data in original_data:
+            print(data)
 
 
 if __name__ == "__main__":
