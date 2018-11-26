@@ -17,6 +17,12 @@ def resize_using_border(img, width, height):
     return cv2.copyMakeBorder(img, bh, bh, bw, bw, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
 
+def threshold(img):
+    """Removes lightgray background noise from an image."""
+    img[img > 192] = 255
+
+    return img
+
 def load_img(path, auto_resize=True):
     """Loads a grayscale image from a path."""
     img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
@@ -26,10 +32,11 @@ def load_img(path, auto_resize=True):
     return img
 
 
-def load_nn_img(path, auto_resize=True):
-    """Loads a grayscale image from a path and converts it into the NN format."""
-    img = load_img(path, auto_resize=auto_resize)
+def load_nn_img(path):
+    """Loads a image from a path and converts it into the NN format."""
+    img = load_img(path)
 
+    img = threshold(img)
     img = img.T
     img = img.astype("float32")
     img /= 255

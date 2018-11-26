@@ -113,6 +113,7 @@ def convert():
                 img = resize_using_border(img, img_w, img_h)
 
             img = resize(img, img_w, img_h)
+            img = threshold(img)
 
             fn = "{}-{}.png".format(str(i).zfill(6), data.word)
             save_img(join(dst, fn), img)
