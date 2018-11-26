@@ -9,81 +9,81 @@ class TensorWidget(MainWindow):
     def __init__(self, parent=None):
         """Constructor."""
         MainWindow.__init__(self, parent=parent)
-        self._image = ImageLabel(parent=self)
-        self._load = QPushButton(parent=self)
-        self._convert = QPushButton(parent=self)
-        self._save = QPushButton(parent=self)
-        self._text = QTextEdit(parent=self)
+        self.image = ImageLabel(parent=self)
+        self.load = QPushButton(parent=self)
+        self.convert = QPushButton(parent=self)
+        self.save = QPushButton(parent=self)
+        self.text = QTextEdit(parent=self)
 
-        self._setup()
-        self._setup_ui()
+        self.setup()
+        self.setup_ui()
 
-        self._load.clicked.connect(self._load_clicked)
-        self._convert.clicked.connect(self._convert_clicked)
-        self._save.clicked.connect(self._save_clicked)
+        self.load.clicked.connect(self.load_clicked)
+        self.convert.clicked.connect(self.convert_clicked)
+        self.save.clicked.connect(self.save_clicked)
 
-    def _setup(self):
+    def setup(self):
         """Sets up the widget."""
         qfile = QFile(":/resource/tensor.css")
         if qfile.open(QFile.ReadOnly):
             stream = QTextStream(qfile)
             self.setStyleSheet(stream.readAll())
 
-    def _setup_ui(self):
+    def setup_ui(self):
         """Sets up user interface."""
-        self._load.setText("Load")
-        self._convert.setText("Convert")
-        self._save.setText("Save")
-        self._text.setReadOnly(True)
+        self.load.setText("Load")
+        self.convert.setText("Convert")
+        self.save.setText("Save")
+        self.text.setReadOnly(True)
 
-        self._image.setMinimumSize(QSize(130, 130))
-        self._load.setMinimumSize(QSize(75, 33))
-        self._convert.setMinimumSize(QSize(75, 33))
-        self._save.setMinimumSize(QSize(75, 33))
-        self._text.setMinimumSize(QSize(130, 130))
+        self.image.setMinimumSize(QSize(130, 130))
+        self.load.setMinimumSize(QSize(75, 33))
+        self.convert.setMinimumSize(QSize(75, 33))
+        self.save.setMinimumSize(QSize(75, 33))
+        self.text.setMinimumSize(QSize(130, 130))
 
         # Make sure that the image and the textbox are the same size
-        policy = self._image.sizePolicy()
+        policy = self.image.sizePolicy()
         policy.setHorizontalStretch(1)
-        self._image.setSizePolicy(policy)
-        policy = self._text.sizePolicy()
+        self.image.setSizePolicy(policy)
+        policy = self.text.sizePolicy()
         policy.setHorizontalStretch(1)
-        self._text.setSizePolicy(policy)
+        self.text.setSizePolicy(policy)
 
         vbox = QVBoxLayout()
-        vbox.addWidget(self._load)
-        vbox.setAlignment(self._load, Qt.AlignBottom)
-        vbox.addWidget(self._convert)
-        vbox.addWidget(self._save)
-        vbox.setAlignment(self._save, Qt.AlignTop)
+        vbox.addWidget(self.load)
+        vbox.setAlignment(self.load, Qt.AlignBottom)
+        vbox.addWidget(self.convert)
+        vbox.addWidget(self.save)
+        vbox.setAlignment(self.save, Qt.AlignTop)
 
         hbox = QHBoxLayout()
         hbox.setSpacing(15)
-        hbox.addWidget(self._image)
+        hbox.addWidget(self.image)
         hbox.addLayout(vbox)
-        hbox.addWidget(self._text)
+        hbox.addWidget(self.text)
         self.setLayout(hbox)
 
-    def _load_clicked(self):
+    def load_clicked(self):
         """Action performed on load clicked."""
         dialog = QFileDialog(parent=self)
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         dialog.setNameFilter("Images (*.png *.jpg *.jpeg)")
         if dialog.exec_():
-            self._image.load(dialog.selectedFiles()[0])
+            self.image.load(dialog.selectedFiles()[0])
 
-    def _convert_clicked(self):
+    def convert_clicked(self):
         """Action performed on convert clicked."""
         pass
 
-    def _save_text(self, path):
+    def save_text(self, path):
         """Saves the text to a given path."""
         qfile = QFile(path)
         if qfile.open(QFile.WriteOnly):
             stream = QTextStream(qfile)
             stream << self._text.toPlainText()
 
-    def _save_clicked(self):
+    def save_clicked(self):
         """Action performned on save clicked."""
         dialog = QFileDialog(parent=self)
         dialog.setFileMode(QFileDialog.AnyFile)
@@ -91,4 +91,4 @@ class TensorWidget(MainWindow):
         dialog.setNameFilter("Text (*.txt)")
         dialog.selectFile("text.txt")
         if dialog.exec_():
-            self._save_text(dialog.selectedFiles()[0])
+            self.save_text(dialog.selectedFiles()[0])

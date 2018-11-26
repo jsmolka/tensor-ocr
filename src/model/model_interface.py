@@ -4,61 +4,60 @@ import keras.backend as K
 from keras.models import model_from_json
 from keras.optimizers import SGD
 
-img_w = 128
-img_h = 64
-
-alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?,:;+-*()#&/'\" "
-alphabet_size = len(alphabet)
+from constants import *
+from image_util import load_nn_img
 
 
-def load_model(json, weights):
+def load_model(json_path, weights_path):
     """Loads the model from json and weight files."""
-    model = None
-    with open(json, "r") as json_file:
+    with open(json_path, "r") as json_file:
         model = model_from_json(json_file.read())
     
-    sgd = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
+    model.load_weights(weights_path)
 
-    model.load_weights(weights)
+    sgd = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
     model.compile(loss="binary_crossentropy", optimizer=sgd, metrics=['accuracy'])
     
     return model
 
 
-def load_img(path):
-    """Loads data from a path."""
-    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-    img = cv2.resize(img, (img_w, img_h))
-
-    img = img.astype('float32')
-    img /= 255
-    img = np.expand_dims(img.T, axis=2)
-
-    return img
-    
-
-def main():
-    """Main function."""
-    model = load_model("model.json", "weights.h5")
-
-    img = load_img(r"C:\Users\Julian\Desktop\parsed_data\000215-that.png")
-    
-    # Todo: support other keras channel, like in model
-    data = np.array([img])
-    # data = np.reshape(data, (1, img_w, img_h, 1))
-    print(data.shape)
-
-    pred = model.predict(data)
-
-    print("Prediction shape:", pred.shape)
-    print(pred.shape)
-    pred = pred[0]
-    for i in range(pred.shape[0]):
-        index = np.argmax(pred[i])
-        if index < alphabet_size:
-            print(alphabet[index])
+_model = load_model("model.json", "weights.h5")
 
 
+def decode_prediction(prediction, top_paths):
+    """Decodes a model prediction."""
+    results = []
+    beam_width = max(5, top_paths)    
+    for i in range(top_paths):
+        labels = K.get_value(
+            K.ctc_decode(
+                prediction, input_length=np.ones(prediction.shape[0]) * prediction.shape[1],
+                greedy=False, beam_width=beam_width, top_paths=top_paths
+            )[0][i]
+        )[0]
 
-if __name__ == "__main__":
-    main()
+        chars = []
+        for index in labels:
+            if index < alphabet_size:
+                chars.append(alphabet[index])
+
+        results.append("".join(chars))
+
+    return results
+
+
+def model_prediction(img):
+    """Returns the prediction for an image."""
+    if len(img.shape) == 3:
+        img = np.expand_dims(img, axis=0)
+
+    return _model.predict(img)
+
+
+def probable_words(img, count=5):
+    """Gets the most probable words for an image (path)."""
+    if isinstance(img, str):
+        img = load_nn_img(img)
+
+    prediction = model_prediction(img) 
+    return decode_prediction(prediction, count)

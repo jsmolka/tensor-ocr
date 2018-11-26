@@ -7,22 +7,18 @@ class ImageLabel(QLabel):
     def __init__(self, parent=None):
         """Constructor."""
         QLabel.__init__(self, parent=parent)
-        self._pixmap = QPixmap()
-        self._path = ""
+        self.pixmap = QPixmap()
+        self.path = ""
 
     def load(self, path):
         """Loads the pixmap from a given path."""
-        self._path = path
-        self._pixmap = QPixmap(path)
-        self._update()
+        self.path = path
+        self.pixmap = QPixmap(path)
+        self.update()
         
-    def path(self):
-        """Path of the current pixmap."""
-        return self._path
-
-    def _scaled_pixmap(self):
+    def scaled_pixmap(self):
         """Resizes the pixmap inside the label."""
-        pixmap = self._pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        pixmap = self.pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
         # Center the pixmap horizontally. Centering it vertically is done
         # automatically
         if pixmap.width() != self.width():
@@ -35,13 +31,13 @@ class ImageLabel(QLabel):
 
         return pixmap
 
-    def _update(self):
+    def update(self):
         """Updates the labels pixmap."""
-        if not self._pixmap.isNull():
-            self.setPixmap(self._scaled_pixmap())
+        if not self.pixmap.isNull():
+            self.setPixmap(self.scaled_pixmap())
 
     def resizeEvent(self, event):
         """Overriden resize event."""
         QLabel.resizeEvent(self, event)
-        self._update()
+        self.update()
 
