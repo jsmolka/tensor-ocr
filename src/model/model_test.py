@@ -13,15 +13,26 @@ def test():
         print("IAM data dir does not exist.")
         sys.exit(1)
 
-    limit = int(input("Test data limit: "))
+    amount = int(input("Test case amount: "))
 
+    correct = 0
     for i, fl in enumerate(iglob(join(src, "*.png")), start=1):
         word = basename(fl)[7:-4]
         words = probable_words(fl)
 
-        print(word, words, word in words)
+        if word in words:
+            correct += 1
 
-        if i == limit:
+        print("{} / {} / {} | {} | {} -> {}".format(
+            str(i).rjust(3),
+            str(correct).rjust(3),
+            str(amount).rjust(3),
+            str(word in words).ljust(5),
+            word.ljust(12),
+            words
+        ))
+
+        if i == amount:
             break
 
 
