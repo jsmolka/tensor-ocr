@@ -1,4 +1,3 @@
-import cv2
 import numpy as np
 import sys
 from glob import iglob
@@ -6,6 +5,7 @@ from os import makedirs
 from os.path import basename, exists, join, splitext
 
 from constants import *
+from image_util import *
 
 
 class WordLineData:
@@ -69,27 +69,13 @@ class IamReader:
             if fn not in self._data:
                 continue
 
-            img = cv2.imread(fl, cv2.IMREAD_GRAYSCALE)
+            img = load_img(fl, auto_resize=False)
             
-            # Ignore corrupt images
+            # Ignore corrupt images.
             if (img is None or 0 in img.shape):
                 continue
 
             yield self._data[fn], img
-
-
-def resize(img, width, height):
-    """Resizes an image using iterpolation."""
-    return cv2.resize(img, dsize=(width, height), interpolation=cv2.INTER_CUBIC)
-
-
-def resize_with_border(img, width, height):
-    """Resizes an image by adding a white border."""
-    h, w = img.shape
-    bw = round((width - w) / 2)
-    bh = round((height - h) / 2)
-
-    return cv2.copyMakeBorder(img, bh, bh, bw, bw, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
 
 def convert():
@@ -124,12 +110,12 @@ def convert():
             # big. They still need to be resized afterwards because they might
             # not have the desired size.
             if len(data.word) <= 2 and height < img_h and width < img_w:
-                img = resize_with_border(img, img_w, img_h)
+                img = resize_using_border(img, img_w, img_h)
 
-            resized = resize(img, img_w, img_h)
+            img = resize(img, img_w, img_h)
 
             fn = "{}-{}.png".format(str(i).zfill(6), data.word)
-            cv2.imwrite(join(dst, fn), resized)
+            save_img(join(dst, fn), img)
 
         except Exception as e:
             print("Failed converting {} with error: {}".format(data.path, str(e)))

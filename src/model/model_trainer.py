@@ -1,4 +1,3 @@
-import cv2
 import keras
 import numpy as np
 import sys
@@ -11,6 +10,7 @@ from keras.optimizers import SGD
 from os.path import join, basename, exists
 
 from constants import *
+from image_util import load_nn_img
 
 train_size = 105000
 valid_size = 5000
@@ -22,7 +22,6 @@ rnn_size = 512
 
 batch_size = 128
 epochs = 10
-channels = 1
 
 max_label_length = 32
 
@@ -37,7 +36,7 @@ def encode_string(string):
 
 def load_data(globber, size):
     """Parses image data into numpy arrays."""
-    x = np.ndarray(shape=(size, img_w, img_h))
+    x = np.ndarray(shape=(size, *input_shape), dtype=np.float32)
     y = np.full(shape=(size, max_label_length), fill_value=alphabet_size)
 
     for i in range(size):
@@ -51,11 +50,7 @@ def load_data(globber, size):
         word_size = len(word)
 
         if word_size <= max_label_length:
-            img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-            if img.shape != (img_h, img_w):
-                img = cv2.resize(img, (img_w, img_h))
-
-            x[i] = img.T
+            x[i] = load_nn_img(path)
             y[i, :word_size] = encode_string(word)
 
     return x, y
@@ -92,18 +87,6 @@ def train():
     globber = iglob(join(src, "*.png"))
     x_train, y_train = load_data(globber, train_size)
     x_valid, y_valid = load_data(globber, valid_size)
-
-    x_train = x_train.astype("float32") / 255
-    x_valid = x_valid.astype("float32") / 255
-
-    if K.image_data_format() == "channels_first":
-        input_shape = (channels, img_w, img_h)
-    else:
-        input_shape = (img_w, img_h, channels)
-
-    reshape = lambda array: array.reshape(array.shape[0], *input_shape)
-    x_train = reshape(x_train)
-    x_valid = reshape(x_valid)
 
     input_length_x = np.full(shape=(train_size,), fill_value=32, dtype=int)
     label_length_y = np.ndarray(shape=(train_size,))
@@ -149,7 +132,6 @@ def train():
     labels = Input(shape=(max_label_length,), dtype="float32", name="labels")
     input_length = Input(shape=(1,), dtype="int64", name="input_length")
     label_length = Input(shape=(1,), dtype="int64", name="label_length")
-
 
     loss_output = Lambda(
         lambda args: K.ctc_batch_cost(*args), output_shape=(1,), 
