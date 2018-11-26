@@ -5,6 +5,7 @@ from os.path import basename, exists, join
 
 from model_interface import probable_words
 
+
 def test():
     """Tests the neural network."""
     src = input("IAM data dir: ")

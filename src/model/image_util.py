@@ -1,42 +1,45 @@
 import cv2
+import numpy as np
 
 from constants import *
 
 
-def resize(img, width, height):
+def resize_img(img, width, height, use_borders=False):
     """Resizes an image using iterpolation."""
-    return cv2.resize(img, dsize=(width, height), interpolation=cv2.INTER_CUBIC)
+    if use_borders:
+        bw = round((width - img.shape[1]) / 2)
+        bh = round((height - img.shape[0]) / 2)
+        return cv2.copyMakeBorder(img, bh, bh, bw, bw, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+    else:
+        return cv2.resize(img, dsize=(width, height), interpolation=cv2.INTER_CUBIC)
 
 
-def resize_using_border(img, width, height):
-    """Resizes an image by adding a white border."""
-    h, w = img.shape
-    bw = round((width - w) / 2)
-    bh = round((height - h) / 2)
+def preprocess_img(img):
+    """Removes background noise from an image and darkens the text color."""
+    shape = img.shape
 
-    return cv2.copyMakeBorder(img, bh, bh, bw, bw, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+    img = img.reshape(-1)
+    preprocess = lambda x: max(0, x - 32) if x <= 192 else 255
+    img = np.fromiter((preprocess(x) for x in img), img.dtype, count=img.shape[0])
+
+    return img.reshape(shape)
 
 
-def threshold(img):
-    """Removes lightgray background noise from an image."""
-    img[img > 192] = 255
-
-    return img
-
-def load_img(path, auto_resize=True):
+def load_img(path, resize=True):
     """Loads a grayscale image from a path."""
     img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-    if auto_resize and img.shape != (img_h, img_w):
-        img = resize(img, img_w, img_h)
+    if resize and img.shape != (img_h, img_w):
+        img = resize_img(img, img_w, img_h)
 
     return img
 
 
-def load_nn_img(path):
+def load_nn_img(path, preprocess=True):
     """Loads a image from a path and converts it into the NN format."""
     img = load_img(path)
 
-    img = threshold(img)
+    if preprocess:
+        img = preprocess_img(img)
     img = img.T
     img = img.astype("float32")
     img /= 255

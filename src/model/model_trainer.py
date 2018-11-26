@@ -12,8 +12,11 @@ from os.path import join, basename, exists
 from constants import *
 from image_util import load_nn_img
 
-train_size = 105000
-valid_size = 5000
+dataset_size = 113000
+valid_ratio = 0.2
+valid_size = round(dataset_size * valid_ratio)
+train_size = dataset_size - valid_size
+
 kernel_size = (3, 3)
 conv_size = 16
 pool_size = 2
@@ -21,7 +24,7 @@ dense_size = 32
 rnn_size = 512
 
 batch_size = 128
-epochs = 10
+epochs = 20
 
 max_label_length = 32
 
@@ -50,7 +53,7 @@ def load_data(globber, size):
         word_size = len(word)
 
         if word_size <= max_label_length:
-            x[i] = load_nn_img(path)
+            x[i] = load_nn_img(path, preprocess=False)
             y[i, :word_size] = encode_string(word)
 
     return x, y

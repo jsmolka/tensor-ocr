@@ -69,7 +69,7 @@ class IamReader:
             if fn not in self._data:
                 continue
 
-            img = load_img(fl, auto_resize=False)
+            img = load_img(fl, resize=False)
             
             # Ignore corrupt images.
             if (img is None or 0 in img.shape):
@@ -96,11 +96,10 @@ def convert():
         makedirs(dst)
 
     reader = IamReader(src)
-    
     for i, (data, img) in enumerate(reader.data_iter(), start=1):
         height, width = img.shape
         try:
-            # Ignore words with reserved Windows characters.
+            # Ignore words with reserved Windows path characters.
             reserved = set(["<", ">", ":", "/", "\\", "|", "?", "*"])
             word_set = set(list(data.word))
             if not reserved.isdisjoint(word_set):
@@ -110,10 +109,10 @@ def convert():
             # big. They still need to be resized afterwards because they might
             # not have the desired size.
             if len(data.word) <= 2 and height < img_h and width < img_w:
-                img = resize_using_border(img, img_w, img_h)
+                img = resize_img(img, img_w, img_h, use_borders=True)
 
-            img = resize(img, img_w, img_h)
-            img = threshold(img)
+            img = resize_img(img, img_w, img_h)
+            img = preprocess_img(img)
 
             fn = "{}-{}.png".format(str(i).zfill(6), data.word)
             save_img(join(dst, fn), img)
