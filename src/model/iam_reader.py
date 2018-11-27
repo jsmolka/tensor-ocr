@@ -1,10 +1,10 @@
 from glob import iglob
 from os.path import basename, join, splitext
 
-from image_util import img_load
+from model.image_util import load_img
 
 
-class WordLineData:
+class ImageData:
     def __init__(self, line):
         """Constructor."""
         self.path = ""
@@ -15,9 +15,9 @@ class WordLineData:
         self.grammar = ""
         self.word = ""
 
-        self.valid = self._parse_line(line)
+        self.valid = self.parse_line(line)
 
-    def _parse_line(self, line):
+    def parse_line(self, line):
         """Parses a line."""
         parts = line.split(" ")
         try:
@@ -38,12 +38,15 @@ class WordLineData:
 
 class IamReader:
     def __init__(self, src):
-        """Constructor."""
-        # Assumes the follwing directory structure.
-        # src/
-        # ├── ascii/
-        # │   └── words.txt
-        # └── words/
+        """
+        Constructor.
+        
+        The source directory needs to have the following structure.
+        src/
+        ├── ascii/
+        │   └── words.txt
+        └── words/
+        """
         self.src = src
         self.data = {}
 
@@ -56,24 +59,22 @@ class IamReader:
                 if line.startswith("#"):
                     continue
 
-                data = WordLineData(line[:-1])
+                data = ImageData(line[:-1])
                 if data.valid:
                     self.data[data.path] = data
 
     def data_iter(self):
         """Creates an iterator for data and image."""
-        globber = join(self.src, "words", "**", "*.png")
-        for fl in iglob(globber, recursive=True):
-            fn = basename(fl)
-            fn = splitext(fn)[0]
+        pattern = join(self.src, "words", "**", "*.png")
+        for fpath in iglob(pattern, recursive=True):
+            fname = basename(fpath)
+            fname = splitext(fname)[0]
 
-            if fn not in self.data:
+            if fname not in self.data:
                 continue
 
-            img = img_load(fl)
-            
-            # Ignore corrupt images.
+            img = load_img(fpath)
             if (img is None or 0 in img.shape):
                 continue
 
-            yield self.data[fn], img
+            yield self.data[fname], img

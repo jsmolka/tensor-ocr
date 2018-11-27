@@ -3,22 +3,19 @@ import numpy as np
 from glob import iglob
 from os.path import basename, exists, join
 
-from model_interface import probable_words
+from model.common import input_dir, file_word
+from model.model_interface import probable_words
 
 
 def test():
     """Tests the neural network."""
-    src = input("IAM data dir: ")
-    if not exists(src):
-        print("IAM data dir does not exist.")
-        sys.exit(1)
-
-    amount = int(input("Test case amount: "))
+    src = input_dir("Converted IAM dataset")
+    amount = int(input("Amount of test cases: "))
 
     correct = 0
-    for i, fl in enumerate(iglob(join(src, "*.png")), start=1):
-        word = basename(fl)[7:-4]
-        words = probable_words(fl)
+    for i, fpath in enumerate(iglob(join(src, "*.png")), start=1):
+        word = file_word(fpath)
+        words = probable_words(fpath, count=5)
 
         if word in words:
             correct += 1
@@ -34,7 +31,3 @@ def test():
 
         if i == amount:
             break
-
-
-if __name__ == "__main__":
-    test()

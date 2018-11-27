@@ -1,22 +1,16 @@
 import sys
+import traceback as tb
 from PyQt5.QtWidgets import QApplication
-from traceback import format_exception
 
 import data.resources
 from widgets.tensorwidget import TensorWidget
 
 
-def excepthook(*exc):
-    """Global except hook."""
-    print("".join(format_exception(*exc)))
-    
-
-def main():
+def main(argv):
     """Main function."""
-    sys.excepthook = excepthook
+    sys.excepthook = lambda *x: print("".join(tb.format_exception(*x)))
 
-    app = QApplication(sys.argv)
-    # Needed for QSettings to work
+    app = QApplication(argv)
     app.setApplicationName("tensor-ocr")
     app.setOrganizationName("tensor-ocr inc.")
     
@@ -27,4 +21,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)

@@ -19,8 +19,6 @@ class ImageLabel(QLabel):
     def scaled_pixmap(self):
         """Resizes the pixmap inside the label."""
         pixmap = self.pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        # Center the pixmap horizontally. Centering it vertically is done
-        # automatically
         if pixmap.width() != self.width():
             fixed = QPixmap(self.size())
             fixed.fill(Qt.transparent)
