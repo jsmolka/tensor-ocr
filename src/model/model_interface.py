@@ -5,7 +5,7 @@ from keras.models import model_from_json
 from keras.optimizers import SGD
 
 from constants import *
-from image_util import load_nn_img
+from image_util import img_load_nn
 
 
 def load_model(json_path, weights_path):
@@ -57,7 +57,7 @@ def model_prediction(img):
 def probable_words(img, count=5):
     """Gets the most probable words for an image (path)."""
     if isinstance(img, str):
-        img = load_nn_img(img)
+        img = img_load_nn(img)
 
     prediction = model_prediction(img) 
     return decode_prediction(prediction, count)

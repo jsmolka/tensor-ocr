@@ -10,7 +10,7 @@ from keras.optimizers import SGD
 from os.path import join, basename, exists
 
 from constants import *
-from image_util import load_nn_img
+from image_util import img_load_nn
 
 dataset_size = 113000
 valid_ratio = 0.2
@@ -53,7 +53,7 @@ def load_data(globber, size):
         word_size = len(word)
 
         if word_size <= max_label_length:
-            x[i] = load_nn_img(path, preprocess=False)
+            x[i] = img_load_nn(path, training=True)
             y[i, :word_size] = encode_string(word)
 
     return x, y

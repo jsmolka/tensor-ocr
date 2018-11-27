@@ -2,6 +2,7 @@ import keras.backend as K
 
 img_w = 128
 img_h = 64
+average_char_width = 37.76
 
 channels = 1
 
