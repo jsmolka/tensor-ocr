@@ -24,7 +24,7 @@ dense_size = 32
 rnn_size = 512
 
 batch_size = 128
-epochs = 20
+epochs = 150
 
 max_label_length = 32
 
