@@ -30,7 +30,9 @@ def resize_with_borders(img, width, height):
 
 def scale(img, factor):
     """Scales an image by a factor."""
-    return cv2.resize(img, dsize=(0, 0), fx=factor, fy=factor, interpolation=cv2.INTER_CUBIC)
+    interpolation = cv2.INTER_AREA if factor <= 1 else cv2.INTER_LANCZOS4
+
+    return cv2.resize(img, dsize=(0, 0), fx=factor, fy=factor, interpolation=interpolation)
 
 
 def scale_to_width(img, width):
