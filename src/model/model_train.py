@@ -1,7 +1,7 @@
 import numpy as np
 from glob import iglob
 from keras import backend as K
-from keras.layers import Activation, Conv2D, Dense, GRU, Input, Lambda, MaxPooling2D, Reshape
+from keras.layers import Activation, Conv2D, Dense, GRU, Input, Lambda, MaxPooling2D, Reshape, CuDNNGRU
 from keras.layers.merge import add, concatenate
 from keras.models import Sequential, Model
 from keras.optimizers import SGD
@@ -21,10 +21,11 @@ kernel_size = (3, 3)
 conv_size = 16
 pool_size = 2
 dense_size = 32
+gpu_enabled = True
 rnn_size = 512
 
 batch_size = 128
-epochs = 50
+epochs = 15
 
 max_label_length = 32
 
@@ -105,13 +106,23 @@ def train():
     inner = Reshape(target_shape=conv_to_rnn_dims, name="reshape")(inner)
     inner = Dense(dense_size, activation="relu", name="dense1")(inner)
 
-    gru_1 = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru1")(inner)
-    gru_1b = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru1b")(inner)
-    gru1_merged = add([gru_1, gru_1b])
-    
-    gru_2 = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru2")(gru1_merged)
-    gru_2b = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru2b")(gru1_merged)
-    gru2_concat = concatenate([gru_2, gru_2b])
+    if (gpu_enabled):
+        gru_1 = CuDNNGRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="cudnn_gru1")(inner)
+        gru_1b = CuDNNGRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="cudnn_gru1b")(inner)
+        gru1_merged = add([gru_1, gru_1b])
+        
+        gru_2 = CuDNNGRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="cudnn_gru2")(gru1_merged)
+        gru_2b = CuDNNGRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="cudnn_gru2b")(gru1_merged)
+        gru2_concat = concatenate([gru_2, gru_2b])
+
+    else:
+        gru_1 = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru1")(inner)
+        gru_1b = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru1b")(inner)
+        gru1_merged = add([gru_1, gru_1b])
+        
+        gru_2 = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru2")(gru1_merged)
+        gru_2b = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru2b")(gru1_merged)
+        gru2_concat = concatenate([gru_2, gru_2b])
 
     inner = Dense(alphabet_size + 1, kernel_initializer="he_normal", name="dense2")(gru2_concat)
     y_pred = Activation("softmax", name="y_pred")(inner)
