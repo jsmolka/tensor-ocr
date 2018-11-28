@@ -3,7 +3,7 @@ from glob import iglob
 from keras import backend as K
 from keras.layers import Activation, Conv2D, Dense, GRU, Input, Lambda, MaxPooling2D, Reshape, CuDNNGRU
 from keras.layers.merge import add, concatenate
-from keras.models import Sequential, Model
+from keras.models import Model
 from keras.optimizers import SGD
 from os.path import join, basename
 
@@ -12,7 +12,7 @@ from model.common import input_dir, file_word
 from model.constants import *
 from model.image_util import load_training_img
 
-dataset_size = 200#113000
+dataset_size = 113000
 valid_ratio = 0.1
 valid_size = round(dataset_size * valid_ratio)
 train_size = dataset_size - valid_size
@@ -21,11 +21,10 @@ kernel_size = (3, 3)
 conv_size = 16
 pool_size = 2
 dense_size = 32
-gpu_enabled = True
 rnn_size = 512
 
 batch_size = 128
-epochs = 15
+epochs = 60
 
 max_label_length = 32
 
@@ -106,23 +105,18 @@ def train():
     inner = Reshape(target_shape=conv_to_rnn_dims, name="reshape")(inner)
     inner = Dense(dense_size, activation="relu", name="dense1")(inner)
 
-    if (gpu_enabled):
-        gru_1 = CuDNNGRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="cudnn_gru1")(inner)
-        gru_1b = CuDNNGRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="cudnn_gru1b")(inner)
-        gru1_merged = add([gru_1, gru_1b])
-        
-        gru_2 = CuDNNGRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="cudnn_gru2")(gru1_merged)
-        gru_2b = CuDNNGRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="cudnn_gru2b")(gru1_merged)
-        gru2_concat = concatenate([gru_2, gru_2b])
-
+    if len(K.tensorflow_backend._get_available_gpus()) > 0:
+        GRU_ = CuDNNGRU 
     else:
-        gru_1 = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru1")(inner)
-        gru_1b = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru1b")(inner)
-        gru1_merged = add([gru_1, gru_1b])
-        
-        gru_2 = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru2")(gru1_merged)
-        gru_2b = GRU(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru2b")(gru1_merged)
-        gru2_concat = concatenate([gru_2, gru_2b])
+        GRU_ = GRU
+
+    gru_1 = GRU_(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru1")(inner)
+    gru_1b = GRU_(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru1b")(inner)
+    gru1_merged = add([gru_1, gru_1b])
+    
+    gru_2 = GRU_(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru2")(gru1_merged)
+    gru_2b = GRU_(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru2b")(gru1_merged)
+    gru2_concat = concatenate([gru_2, gru_2b])
 
     inner = Dense(alphabet_size + 1, kernel_initializer="he_normal", name="dense2")(gru2_concat)
     y_pred = Activation("softmax", name="y_pred")(inner)
@@ -134,19 +128,17 @@ def train():
     label_length = Input(shape=(1,), dtype="int64", name="label_length")
 
     loss_output = Lambda(
-        lambda args: K.ctc_batch_cost(*args), output_shape=(1,), 
-        name="ctc")([labels, y_pred, input_length, label_length]
-    )
+        lambda args: K.ctc_batch_cost(*args), output_shape=(1,), name="ctc"
+    )([labels, y_pred, input_length, label_length])
+
+    sgd = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
 
     model = Model(inputs=[input_data, labels, input_length, label_length], outputs=loss_output)
-    sgd = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
-    model.compile(loss={"ctc": lambda y_true, y_pred: y_pred}, optimizer=sgd, metrics=["accuracy"])
-
-    output = np.ndarray(shape=(train_size,))
+    model.compile(sgd, loss={"ctc": lambda y_true, y_pred: y_pred}, metrics=["accuracy"])
 
     model.fit(
         x=[x_train, y_train, input_length_x, label_length_y], 
-        y=output, 
+        y=np.ndarray(shape=(train_size,)), 
         batch_size=batch_size,
         epochs=epochs,
         verbose=1,
