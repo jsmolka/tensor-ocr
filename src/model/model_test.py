@@ -15,7 +15,7 @@ def test():
     correct = 0
     for i, fpath in enumerate(iglob(join(src, "*.png")), start=1):
         word = file_word(fpath)
-        words = probable_words(fpath, count=5)
+        words = probable_words(fpath, 3)
 
         if word in words:
             correct += 1

@@ -5,7 +5,7 @@ from keras.optimizers import SGD
 
 from data.dataprovider import data_path
 from model.constants import *
-from model.image_util import load_network_img
+from utils.image_util import load_network_img
 
 _model = None
 
@@ -75,7 +75,7 @@ def predict(img):
     return get_model().predict(img)
 
 
-def probable_words(img, count=10):
+def probable_words(img, count):
     """Gets the most probable words for an image (path)."""
     if isinstance(img, str):
         img = load_network_img(img)

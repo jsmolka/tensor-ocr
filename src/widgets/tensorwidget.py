@@ -3,6 +3,7 @@ from PyQt5.QtCore import QFile, QTextStream, QSize, Qt, QTextStream
 from PyQt5.QtWidgets import QHBoxLayout, QFileDialog, QPushButton, QSizePolicy, QTextEdit, QVBoxLayout
 
 from model.model_interface import init_model, probable_words
+from utils.word_util import guess_word
 from widgets.imagelabel import ImageLabel
 from widgets.mainwindow import MainWindow
 
@@ -80,9 +81,8 @@ class TensorWidget(MainWindow):
             return
 
         self.text.clear()
-        words = probable_words(self.image.path)
-        for word in words:
-            self.text.append(word)
+        words = probable_words(self.image.path, 3)
+        self.text.append(guess_word(words))
 
     def save_text(self, path):
         """Saves the text to a given path."""

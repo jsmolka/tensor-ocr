@@ -10,7 +10,7 @@ from os.path import join, basename
 from data.dataprovider import data_path
 from model.common import input_dir, file_word
 from model.constants import *
-from model.image_util import load_training_img
+from utils.image_util import load_training_img
 
 dataset_size = 113000
 valid_ratio = 0.1
@@ -24,7 +24,7 @@ dense_size = 32
 rnn_size = 512
 
 batch_size = 128
-epochs = 60
+epochs = 200
 
 max_label_length = 32
 
