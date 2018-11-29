@@ -4,8 +4,9 @@ from keras.models import model_from_json
 from keras.optimizers import SGD
 
 from data.dataprovider import data_path
-from model.constants import *
-from utils.image_util import load_network_img
+from model.alphabet import *
+from model.utils.image import load_network_img
+from model.utils.word import guess_word
 
 _model = None
 
@@ -18,7 +19,7 @@ def load_model(json_file, weights_file):
     model.load_weights(weights_file)
 
     sgd = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
-    model.compile(loss="binary_crossentropy", optimizer=sgd, metrics=['accuracy'])
+    model.compile(sgd, loss="binary_crossentropy", metrics=['accuracy'])
     
     return model
 
@@ -76,9 +77,13 @@ def predict(img):
 
 
 def probable_words(img, count):
-    """Gets the most probable words for an image (path)."""
+    """Gets the most probable words for an image."""
+    return decode_prediction(predict(img), count)
+
+
+def predict_word(img):
+    """Predicts the word for an image (path)."""
     if isinstance(img, str):
         img = load_network_img(img)
 
-    prediction = predict(img) 
-    return decode_prediction(prediction, count)
+    return guess_word(probable_words(img, 3))

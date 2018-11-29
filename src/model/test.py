@@ -4,7 +4,7 @@ from glob import iglob
 from os.path import basename, exists, join
 
 from model.common import input_dir, file_word
-from model.model_interface import probable_words
+from model.interface import predict_word
 
 
 def test():
@@ -15,18 +15,18 @@ def test():
     correct = 0
     for i, fpath in enumerate(iglob(join(src, "*.png")), start=1):
         word = file_word(fpath)
-        words = probable_words(fpath, 3)
+        prediction = predict_word(fpath)
 
-        if word in words:
+        if word == prediction:
             correct += 1
 
         print("{} / {} / {} | {} | {} -> {}".format(
             str(i).rjust(3),
             str(correct).rjust(3),
             str(amount).rjust(3),
-            str(word in words).ljust(5),
-            word.ljust(12),
-            words
+            str(word == prediction).ljust(5),
+            word.ljust(15),
+            prediction
         ))
 
         if i == amount:

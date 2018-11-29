@@ -1,9 +1,8 @@
 from os.path import join
 
 from model.common import input_dir
-from model.constants import *
-from model.iam_reader import IamReader
-from utils.image_util import network_preprocess, save_img
+from model.iam.reader import IamReader
+from model.utils.image import network_preprocess, save_img
 
 
 def contains_reserved_character(word):

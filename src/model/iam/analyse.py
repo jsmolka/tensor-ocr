@@ -1,5 +1,5 @@
 from model.common import input_dir
-from model.iam_reader import IamReader
+from model.iam.reader import IamReader
 
 
 def analyse():

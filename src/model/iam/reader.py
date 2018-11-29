@@ -1,7 +1,7 @@
 from glob import iglob
 from os.path import basename, join, splitext
 
-from utils.image_util import load_img
+from model.utils.image import load_img
 
 
 class ImageData:

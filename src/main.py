@@ -1,9 +1,9 @@
 import sys
 
-from model.iam_analyse import analyse
-from model.iam_convert import convert
-from model.model_train import train
-from model.model_test import test
+from model.iam.analyse import analyse
+from model.iam.convert import convert
+from model.train import train
+from model.test import test
 
 
 def main(argv):

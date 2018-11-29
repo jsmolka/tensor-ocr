@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+from model.alphabet import *
 from model.constants import *
 
 

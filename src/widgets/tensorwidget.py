@@ -1,9 +1,8 @@
-from os.path import dirname
+from os.path import dirname, exists
 from PyQt5.QtCore import QFile, QTextStream, QSize, Qt, QTextStream
 from PyQt5.QtWidgets import QHBoxLayout, QFileDialog, QPushButton, QSizePolicy, QTextEdit, QVBoxLayout
 
-from model.model_interface import init_model, probable_words
-from utils.word_util import guess_word
+from model.interface import init_model, predict_word
 from widgets.imagelabel import ImageLabel
 from widgets.mainwindow import MainWindow
 
@@ -20,9 +19,9 @@ class TensorWidget(MainWindow):
         self.setup()
         self.setup_ui()
 
-        self.load.clicked.connect(self.load_clicked)
-        self.convert.clicked.connect(self.convert_clicked)
-        self.save.clicked.connect(self.save_clicked)
+        self.load.released.connect(self.load_released)
+        self.convert.released.connect(self.convert_released)
+        self.save.released.connect(self.save_released)
 
         init_model()
 
@@ -67,22 +66,21 @@ class TensorWidget(MainWindow):
         hbox.addWidget(self.text)
         self.setLayout(hbox)
 
-    def load_clicked(self):
-        """Action performed on load clicked."""
+    def load_released(self):
+        """Action performed on load released."""
         dialog = QFileDialog(parent=self)
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         dialog.setNameFilter("Images (*.png *.jpg *.jpeg)")
         if dialog.exec_():
             self.image.load(dialog.selectedFiles()[0])
 
-    def convert_clicked(self):
-        """Action performed on convert clicked."""
-        if not self.image.path:
+    def convert_released(self):
+        """Action performed on convert released."""
+        if not exists(self.image.path):
             return
 
         self.text.clear()
-        words = probable_words(self.image.path, 3)
-        self.text.append(guess_word(words))
+        self.text.append(predict_word(self.image.path))
 
     def save_text(self, path):
         """Saves the text to a given path."""
@@ -91,8 +89,8 @@ class TensorWidget(MainWindow):
             stream = QTextStream(qfile)
             stream << self.text.toPlainText()
 
-    def save_clicked(self):
-        """Action performned on save clicked."""
+    def save_released(self):
+        """Action performned on save released."""
         dialog = QFileDialog(parent=self)
         dialog.setFileMode(QFileDialog.AnyFile)
         dialog.setAcceptMode(QFileDialog.AcceptSave)

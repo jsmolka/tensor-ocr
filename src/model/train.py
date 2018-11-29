@@ -9,8 +9,9 @@ from os.path import join, basename
 
 from data.dataprovider import data_path
 from model.common import input_dir, file_word
+from model.alphabet import *
 from model.constants import *
-from utils.image_util import load_training_img
+from model.utils.image import load_training_img
 
 dataset_size = 113000
 valid_ratio = 0.1
@@ -105,7 +106,7 @@ def train():
     inner = Reshape(target_shape=conv_to_rnn_dims, name="reshape")(inner)
     inner = Dense(dense_size, activation="relu", name="dense1")(inner)
 
-    if len(K.tensorflow_backend._get_available_gpus()) > 0:
+    if gpu_enabled:
         GRU_ = CuDNNGRU 
     else:
         GRU_ = GRU
