@@ -66,14 +66,14 @@ class IamReader:
     def data_iter(self):
         """Creates an iterator for data and image."""
         pattern = join(self.src, "words", "**", "*.png")
-        for fpath in iglob(pattern, recursive=True):
-            fname = basename(fpath)
+        for path in iglob(pattern, recursive=True):
+            fname = basename(path)
             fname = splitext(fname)[0]
 
             if fname not in self.data:
                 continue
 
-            img = load_img(fpath)
+            img = load_img(path)
             if (img is None or 0 in img.shape):
                 continue
 

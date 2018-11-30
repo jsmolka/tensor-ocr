@@ -10,11 +10,11 @@ from random import shuffle
 
 from data.dataprovider import data_path
 from model.alphabet import *
-from model.common import input_dir, file_word
+from model.common import input_dir, file_to_word
 from model.constants import *
 from model.utils.image import load_training_img
 
-dataset_size = 113000
+dataset_size = 113#000
 valid_ratio = 0.1
 valid_size = round(dataset_size * valid_ratio)
 train_size = dataset_size - valid_size
@@ -65,7 +65,7 @@ def load_data(src):
 
     paths = load_paths(src, dataset_size)
     for i, path in enumerate(paths):
-        word = file_word(path)
+        word = file_to_word(path)
         word_len = len(word)
 
         x[i] = load_training_img(path)

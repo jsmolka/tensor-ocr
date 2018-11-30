@@ -1,6 +1,6 @@
 from os.path import join
 
-from model.common import input_dir
+from model.common import input_dir, word_to_file
 from model.iam.reader import IamReader
 from model.utils.image import network_preprocess, save_img
 
@@ -23,7 +23,7 @@ def convert():
         if contains_reserved_character(data.word):
             continue
 
-        img = network_preprocess(img, data.word)
+        img = network_preprocess(img, word=data.word)
 
-        fname = "{}-{}.png".format(str(i).zfill(6), data.word)
+        fname = word_to_file(i, data.word)
         save_img(join(dst, fname), img)

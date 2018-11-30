@@ -54,7 +54,7 @@ def fuzzy_guess(words):
     lower_words = [word.lower() for word in words]
 
     possible = []
-    for i in range(-1, 2):
+    for i in (-1, 0, 1):
         possible.extend(dictionary_dict[length + i])
 
     possible.sort(key=lambda x: fuzzy_score(x, lower_words), reverse=True)

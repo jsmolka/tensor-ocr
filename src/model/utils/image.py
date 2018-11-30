@@ -50,10 +50,9 @@ def scale_to_height(img, height):
     return scale(img, height / h)
 
 
-def scale_to_word_width(img, word, limit=img_w):
+def scale_to_word_width(img, word, limit):
     """Resizes an image to the average word width."""
-    width = len(word) * average_char_width
-    width = min(width, limit)
+    width = min(limit, len(word) * average_char_width)
 
     return scale_to_width(img, width)
 
@@ -81,7 +80,7 @@ def network_color(img):
 def network_preprocess(img, word=None):
     """Preprocesses an image for the NN."""
     if word is not None and word not in set(alphabet_other):
-        img = scale_to_word_width(img, word)
+        img = scale_to_word_width(img, word, img_w)
 
     _, w = img.shape
     if w > img_w:
@@ -109,14 +108,14 @@ def load_network_img(fpath):
     """Loads an image and converts it for the NN."""
     img = load_img(fpath)
     img = network_preprocess(img)
-    save_img("C:/Users/Julian/Desktop/test.png", img)
 
     return network_format(img)
 
 
-def rotate_img(img, angle):
+def rotate_by_angle(img, angle):
     """Rotates an image by an angle."""
-    center = tuple(np.array(img.shape[1::-1]) / 2)
+    h, w = img.shape
+    center = (w / 2, h / 2)
     rotate = cv2.getRotationMatrix2D(center, angle, 1.0)
 
-    return cv2.warpAffine(img, rotate, img.shape[1::-1], flags=cv2.INTER_LINEAR, borderValue=[255, 255, 255])
+    return cv2.warpAffine(img, rotate, (w, h), flags=cv2.INTER_LANCZOS4, borderValue=[255, 255, 255])

@@ -16,6 +16,11 @@ def input_dir(name, create=False):
     return src
 
 
-def file_word(fpath):
+def file_to_word(path):
     """Returns the word of a file."""
-    return basename(fpath)[7:-4]
+    return basename(path)[7:-4]
+
+
+def word_to_file(index, word):
+    """Creates a filename from an index and a word."""
+    return "{}-{}.png".format(str(index).zfill(6), word)
