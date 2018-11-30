@@ -109,5 +109,14 @@ def load_network_img(fpath):
     """Loads an image and converts it for the NN."""
     img = load_img(fpath)
     img = network_preprocess(img)
+    save_img("C:/Users/Julian/Desktop/test.png", img)
 
     return network_format(img)
+
+
+def rotate_img(img, angle):
+    """Rotates an image by an angle."""
+    center = tuple(np.array(img.shape[1::-1]) / 2)
+    rotate = cv2.getRotationMatrix2D(center, angle, 1.0)
+
+    return cv2.warpAffine(img, rotate, img.shape[1::-1], flags=cv2.INTER_LINEAR, borderValue=[255, 255, 255])

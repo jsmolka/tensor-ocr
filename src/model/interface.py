@@ -6,17 +6,17 @@ from keras.optimizers import SGD
 from data.dataprovider import data_path
 from model.alphabet import *
 from model.utils.image import load_network_img
-from model.utils.word import guess_word
+from model.utils.guess import guess_word
 
 _model = None
 
 
-def load_model(json_file, weights_file):
+def load_model(json, weights):
     """Loads the model from json and weight files."""
-    with open(json_file, "r") as infile:
+    with open(json, "r") as infile:
         model = model_from_json(infile.read())
     
-    model.load_weights(weights_file)
+    model.load_weights(weights)
 
     sgd = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
     model.compile(sgd, loss="binary_crossentropy", metrics=['accuracy'])

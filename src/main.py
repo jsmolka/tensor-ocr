@@ -1,33 +1,33 @@
+import numpy as np
 import sys
+import random
 
 from model.iam.analyse import analyse
 from model.iam.convert import convert
+from model.iam.rotate import rotate
 from model.train import train
 from model.test import test
 
 
 def main(argv):
     """Main function."""
+    random.seed(100)
+    np.random.seed(100)
+
     args = argv[1:]
 
-    arg_analyse = "--analyse"
-    arg_convert = "--convert"
-    arg_train = "--train"
-    arg_test = "--test"
+    funcs = {
+        "--analyse": analyse,
+        "--convert": convert,
+        "--rotate": rotate,
+        "--train": train,
+        "--test": test
+    }
 
     if len(args) == 0:
         print("Please use one or more of the following arguments.")
-        print(arg_analyse)
-        print(arg_convert)
-        print(arg_train)
-        print(arg_test)
-    
-    funcs = {
-        arg_analyse: analyse,
-        arg_convert: convert,
-        arg_train: train,
-        arg_test: test
-    }
+        for key in funcs.keys():
+            print(key)
 
     for arg in args:
         if arg in funcs:

@@ -5,11 +5,12 @@ from keras.layers import Activation, Conv2D, Dense, GRU, Input, Lambda, MaxPooli
 from keras.layers.merge import add, concatenate
 from keras.models import Model
 from keras.optimizers import SGD
-from os.path import join, basename
+from os.path import join
+from random import shuffle
 
 from data.dataprovider import data_path
-from model.common import input_dir, file_word
 from model.alphabet import *
+from model.common import input_dir, file_word
 from model.constants import *
 from model.utils.image import load_training_img
 
@@ -39,58 +40,78 @@ def encode_string(string):
     return [alphabet.find(char) for char in string]
 
 
-def load_data(globber, size):
+def load_paths(src, limit):
+    """
+    Loads file paths for a given source directory. Shuffling the files paths 
+    prevents only using rotated images as validation data.
+    """
+    paths = []
+    
+    pattern = join(src, "*.png")
+    for i, path in enumerate(iglob(pattern), start=1):
+        paths.append(path)
+        if i == limit:
+            break
+
+    shuffle(paths)
+    return paths
+        
+
+def load_data(src):
     """Parses image data into numpy arrays."""
-    x = np.ndarray(shape=(size, *input_shape), dtype=np.float32)
-    y = np.full(shape=(size, max_label_length), fill_value=alphabet_size)
+    x = np.ndarray(shape=(dataset_size, *input_shape), dtype=np.float32)
+    y = np.full(shape=(dataset_size, max_label_length), fill_value=alphabet_size, dtype=np.uint8)
+    z = np.ndarray(shape=(dataset_size,), dtype=np.uint8)
 
-    for i in range(size):
-        fpath = next(globber)
-        word = file_word(fpath)
-        if len(word) <= max_label_length:
-            x[i] = load_training_img(fpath)
-            y[i, :len(word)] = encode_string(word)
+    paths = load_paths(src, dataset_size)
+    for i, path in enumerate(paths):
+        word = file_word(path)
+        word_len = len(word)
 
-    return x, y
+        x[i] = load_training_img(path)
+        y[i, :word_len] = encode_string(word)
+        z[i] = word_len
+
+    return x, y, z
+
+
+def slice_data(x):
+    """Slices data into training and validation data."""
+    train = x[:train_size]
+    valid = x[dataset_size - valid_size:]
+    
+    return train, valid
 
 
 def convert_model(model, inputs, outputs):
     """Converts the trained model into one without the extra input layers."""
-    new_model = Model(inputs=inputs, outputs=outputs)
+    new = Model(inputs=inputs, outputs=outputs)
 
     for i, layer in enumerate(model.layers[:-4]):
-        new_model.layers[i].set_weights(layer.get_weights())
+        new.layers[i].set_weights(layer.get_weights())
 
-    return new_model
+    return new
 
 
-def save_model(model, json_file, weights_file):
+def save_model(model, json, weigts):
     """Saves a model."""
-    with open(json_file, "w") as outfile:
+    with open(json, "w") as outfile:
         outfile.write(model.to_json())
 
-    model.save_weights(weights_file)
+    model.save_weights(weigts)
 
 
 def train():
     """Trains and saves the model."""
     src = input_dir("Converted IAM dataset")
+    x, y, z = load_data(src)
 
-    globber = iglob(join(src, "*.png"))
-    x_train, y_train = load_data(globber, train_size)
-    x_valid, y_valid = load_data(globber, valid_size)
+    x_train, x_valid = slice_data(x)
+    y_train, y_valid = slice_data(y)
+    y_train_label_length, y_valid_label_length = slice_data(z)
 
-    input_length_x = np.full(shape=(train_size,), fill_value=32, dtype=int)
-    label_length_y = np.ndarray(shape=(train_size,))
-
-    input_length_x_valid = np.full(shape=(valid_size,), fill_value=32, dtype=int)
-    label_length_y_valid = np.ndarray(shape=(valid_size,))
-
-    for i, item in enumerate(y_train):
-        label_length_y[i] = item.shape[0]
-
-    for i, item in enumerate(y_valid):
-        label_length_y_valid[i] = item.shape[0]
+    x_train_input_length = np.full(shape=(train_size,), fill_value=max_label_length, dtype=np.uint8)
+    x_valid_input_length = np.full(shape=(valid_size,), fill_value=max_label_length, dtype=np.uint8)
 
     input_data = Input(name="input_data", shape=input_shape, dtype="float32")
     inner = Conv2D(conv_size, kernel_size=kernel_size, padding="same", activation="relu", kernel_initializer="he_normal", name="conv1")(input_data)
@@ -138,12 +159,12 @@ def train():
     model.compile(sgd, loss={"ctc": lambda y_true, y_pred: y_pred}, metrics=["accuracy"])
 
     model.fit(
-        x=[x_train, y_train, input_length_x, label_length_y], 
+        x=[x_train, y_train, x_train_input_length, y_train_label_length], 
         y=np.ndarray(shape=(train_size,)), 
         batch_size=batch_size,
         epochs=epochs,
         verbose=1,
-        validation_data=([x_valid, y_valid, input_length_x_valid, label_length_y_valid], y_valid)
+        validation_data=([x_valid, y_valid, x_valid_input_length, y_valid_label_length], y_valid)
     )
 
     model = convert_model(model, inputs=input_data, outputs=y_pred)
