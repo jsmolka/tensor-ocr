@@ -14,6 +14,7 @@ def random_angle():
 def rotate():
     """Converts the IAM dataset."""
     src = input_dir("Converted IAM dataset")
+    dst = input_dir("Destination", create=True)
     
     paths = glob(join(src, "*.png"))
     for i, path in enumerate(paths, start=len(paths) + 1):
@@ -22,4 +23,4 @@ def rotate():
 
         word = file_to_word(path)
         fname = word_to_file(i, word)
-        save_img(join(src, fname), img)
+        save_img(join(dst, fname), img)

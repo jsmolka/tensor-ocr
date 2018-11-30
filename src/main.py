@@ -1,6 +1,7 @@
 import numpy as np
-import sys
 import random
+import sys
+import tensorflow as tf
 
 from model.iam.analyse import analyse
 from model.iam.convert import convert
@@ -11,8 +12,9 @@ from model.test import test
 
 def main(argv):
     """Main function."""
-    random.seed(100)
-    np.random.seed(100)
+    tf.set_random_seed(0)
+    np.random.seed(0)
+    random.seed(0)
 
     args = argv[1:]
 

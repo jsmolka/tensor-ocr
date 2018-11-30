@@ -1,20 +1,18 @@
 import numpy as np
-from glob import iglob
 from keras import backend as K
 from keras.layers import Activation, Conv2D, Dense, GRU, Input, Lambda, MaxPooling2D, Reshape, CuDNNGRU
 from keras.layers.merge import add, concatenate
 from keras.models import Model
 from keras.optimizers import SGD
 from os.path import join
-from random import shuffle
 
 from data.dataprovider import data_path
 from model.alphabet import *
-from model.common import input_dir, file_to_word
+from model.common import shuffled_paths, input_dir, file_to_word
 from model.constants import *
 from model.utils.image import load_training_img
 
-dataset_size = 113#000
+dataset_size = 226000
 valid_ratio = 0.1
 valid_size = round(dataset_size * valid_ratio)
 train_size = dataset_size - valid_size
@@ -26,7 +24,7 @@ dense_size = 32
 rnn_size = 512
 
 batch_size = 128
-epochs = 200
+epochs = 75
 
 max_label_length = 32
 
@@ -40,30 +38,13 @@ def encode_string(string):
     return [alphabet.find(char) for char in string]
 
 
-def load_paths(src, limit):
-    """
-    Loads file paths for a given source directory. Shuffling the files paths 
-    prevents only using rotated images as validation data.
-    """
-    paths = []
-    
-    pattern = join(src, "*.png")
-    for i, path in enumerate(iglob(pattern), start=1):
-        paths.append(path)
-        if i == limit:
-            break
-
-    shuffle(paths)
-    return paths
-        
-
 def load_data(src):
     """Parses image data into numpy arrays."""
     x = np.ndarray(shape=(dataset_size, *input_shape), dtype=np.float32)
     y = np.full(shape=(dataset_size, max_label_length), fill_value=alphabet_size, dtype=np.uint8)
     z = np.ndarray(shape=(dataset_size,), dtype=np.uint8)
 
-    paths = load_paths(src, dataset_size)
+    paths = shuffled_paths(src, dataset_size)
     for i, path in enumerate(paths):
         word = file_to_word(path)
         word_len = len(word)

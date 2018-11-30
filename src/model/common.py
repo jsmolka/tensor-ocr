@@ -1,6 +1,8 @@
 import sys
+from glob import glob
 from os import makedirs
-from os.path import basename, exists
+from os.path import basename, exists, join
+from random import shuffle
 
 
 def input_dir(name, create=False):
@@ -14,6 +16,15 @@ def input_dir(name, create=False):
             sys.exit()
 
     return src
+
+
+def shuffled_paths(src, limit):
+    """Loads shuffled paths for a given source directory."""
+    pattern = join(src, "*.png")
+    paths = glob(pattern)
+    
+    shuffle(paths)
+    return paths[:limit]
 
 
 def file_to_word(path):
