@@ -1,6 +1,6 @@
 import numpy as np
 from keras import backend as K
-from keras.layers import Activation, Conv2D, Dense, GRU, Input, Lambda, MaxPooling2D, Reshape, CuDNNGRU
+from keras.layers import Activation, Conv2D, Dense, Input, Lambda, MaxPooling2D, Reshape, LSTM, CuDNNLSTM
 from keras.layers.merge import add, concatenate
 from keras.models import Model
 from keras.optimizers import SGD
@@ -109,19 +109,19 @@ def train():
     inner = Dense(dense_size, activation="relu", name="dense1")(inner)
 
     if gpu_enabled:
-        GRU_ = CuDNNGRU 
+        LSTM_ = CuDNNLSTM 
     else:
-        GRU_ = GRU
+        LSTM_ = LSTM
 
-    gru_1 = GRU_(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru1")(inner)
-    gru_1b = GRU_(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru1b")(inner)
-    gru1_merged = add([gru_1, gru_1b])
+    lstm_1 = LSTM_(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="lstm1")(inner)
+    lstm_1b = LSTM_(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="lstm1b")(inner)
+    lstm1_merged = add([lstm_1, lstm_1b])
     
-    gru_2 = GRU_(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="gru2")(gru1_merged)
-    gru_2b = GRU_(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="gru2b")(gru1_merged)
-    gru2_concat = concatenate([gru_2, gru_2b])
+    lstm_2 = LSTM_(rnn_size, return_sequences=True, kernel_initializer="he_normal", name="lstm2")(lstm1_merged)
+    lstm_2b = LSTM_(rnn_size, return_sequences=True, kernel_initializer="he_normal", go_backwards=True, name="lstm2b")(lstm1_merged)
+    lstm2_concat = concatenate([lstm_2, lstm_2b])
 
-    inner = Dense(alphabet_size + 1, kernel_initializer="he_normal", name="dense2")(gru2_concat)
+    inner = Dense(alphabet_size + 1, kernel_initializer="he_normal", name="dense2")(lstm2_concat)
     y_pred = Activation("softmax", name="y_pred")(inner)
 
     Model(inputs=input_data, outputs=y_pred).summary()
