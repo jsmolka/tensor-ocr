@@ -1,10 +1,11 @@
 from os.path import dirname, exists
 from PyQt5.QtCore import QFile, QTextStream, QSize, Qt, QTextStream
-from PyQt5.QtWidgets import QHBoxLayout, QFileDialog, QPushButton, QSizePolicy, QTextEdit, QVBoxLayout
+from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout
 
 from model.interface import init_model, predict_word
 from widgets.imagelabel import ImageLabel
 from widgets.mainwindow import MainWindow
+
 
 class TensorWidget(MainWindow):
     def __init__(self, parent=None):
@@ -14,7 +15,7 @@ class TensorWidget(MainWindow):
         self.load = QPushButton(parent=self)
         self.convert = QPushButton(parent=self)
         self.save = QPushButton(parent=self)
-        self.text = QTextEdit(parent=self)
+        self.text = QLabel(parent=self)
 
         self.setup()
         self.setup_ui()
@@ -37,7 +38,6 @@ class TensorWidget(MainWindow):
         self.load.setText("Load")
         self.convert.setText("Convert")
         self.save.setText("Save")
-        self.text.setReadOnly(True)
 
         self.image.setMinimumSize(QSize(130, 130))
         self.load.setMinimumSize(QSize(75, 33))
@@ -51,6 +51,8 @@ class TensorWidget(MainWindow):
         policy = self.text.sizePolicy()
         policy.setHorizontalStretch(1)
         self.text.setSizePolicy(policy)
+
+        self.text.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.load)
@@ -76,18 +78,15 @@ class TensorWidget(MainWindow):
 
     def convert_released(self):
         """Action performed on convert released."""
-        if not exists(self.image.path):
-            return
-
-        self.text.clear()
-        self.text.append(predict_word(self.image.path))
+        if exists(self.image.path):
+            self.text.setText(predict_word(self.image.path))
 
     def save_text(self, path):
         """Saves the text to a given path."""
         qfile = QFile(path)
         if qfile.open(QFile.WriteOnly):
             stream = QTextStream(qfile)
-            stream << self.text.toPlainText()
+            stream << self.text.text()
 
     def save_released(self):
         """Action performned on save released."""

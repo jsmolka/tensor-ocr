@@ -3,12 +3,8 @@ TensorWidget {
 }
 
 QLabel {
-    background: transparent;
-    border: 2px solid orange;
-}
-
-QTextEdit {
     color: white;
+    font-size: 20px;
     background: transparent;
     border: 2px solid orange;
 }
