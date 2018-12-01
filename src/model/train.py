@@ -48,10 +48,10 @@ def load_data(src):
     for i, path in enumerate(paths):
         word = file_to_word(path)
         word_len = len(word)
-
-        x[i] = load_training_img(path)
-        y[i, :word_len] = encode_string(word)
-        z[i] = word_len
+        if word_len <= max_label_length:
+            x[i] = load_training_img(path)
+            y[i, :word_len] = encode_string(word)
+            z[i] = word_len
 
     return x, y, z
 
