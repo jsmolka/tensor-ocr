@@ -22,3 +22,7 @@ QPushButton:hover {
 QPushButton:pressed {
     background: rgb(68, 68, 68)
 }
+
+QCheckBox {
+    color: white;
+}

@@ -81,9 +81,10 @@ def probable_words(img, count):
     return decode_prediction(predict(img), count)
 
 
-def predict_word(img):
+def predict_word(img, guess):
     """Predicts the word for an image (path)."""
     if isinstance(img, str):
         img = load_network_img(img)
 
-    return guess_word(probable_words(img, 3))
+    words = probable_words(img, 3)
+    return guess_word(words) if guess else words[0]
