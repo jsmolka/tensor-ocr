@@ -20,7 +20,7 @@ def test():
     paths = shuffled_paths(src, amount)
     for i, path in enumerate(paths, start=1):
         word = file_to_word(path)
-        pred = predict_word(path)
+        pred = predict_word(path, word)
 
         if word == pred:
             correct += 1
@@ -33,3 +33,6 @@ def test():
             word.ljust(15),
             pred
         ))
+
+    print("{} of {} correct".format(str(correct), str(amount)))
+    print("{}% correct".format(str(correct / amount * 100)))
