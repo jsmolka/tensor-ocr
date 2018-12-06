@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QCheckBox, QFileDialog, QHBoxLayout, QLabel, QPushBu
 from model.interface import init_model, predict_word
 from widgets.imagelabel import ImageLabel
 from widgets.mainwindow import MainWindow
+from widgets.strings import *
 
 
 class TensorWidget(MainWindow):
@@ -39,10 +40,10 @@ class TensorWidget(MainWindow):
 
     def setup_ui(self):
         """Sets up user interface."""
-        self.load_btn.setText("Load")
-        self.convert_btn.setText("Convert")
-        self.save_btn.setText("Save")
-        self.dict_chk.setText("Use dictionary")
+        self.load_btn.setText(tr(res_load))
+        self.convert_btn.setText(tr(res_convert))
+        self.save_btn.setText(tr(res_save))
+        self.dict_chk.setText(tr(res_use_dict))
 
         size = QSize(175, 175)
         self.image_lbl.setMinimumSize(size)

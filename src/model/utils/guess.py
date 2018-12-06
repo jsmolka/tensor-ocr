@@ -10,7 +10,7 @@ def likely_length(words):
 
 
 def case_mask_char(words, i):
-    """Creates a case mask for a character at an index."""
+    """Creates a case mask for given word index."""
     mask = {True: 0, False: 0}
     for word in words:
         if i < len(word):
@@ -20,7 +20,10 @@ def case_mask_char(words, i):
 
 
 def case_mask(words, length):
-    """Creates a case mask up to a defined length."""
+    """
+    Creates a case mask up to a defined length. The char mask defines if a
+    character needs to be capitalized or not.
+    """
     return [case_mask_char(words, i) for i in range(length)]
 
 
@@ -43,26 +46,40 @@ def remove_other(word):
     return "".join([char for char in word if char not in other])
 
 
-def fuzzy_score(x, words):
-    """Fuzzy score between x and other words."""
-    return sum(fuzz.token_set_ratio(x, word) for word in words) / len(words)
+def fuzzy_score(word, words):
+    """Calculates the average fuzzy score between a given word and other words."""
+    return sum(fuzz.token_set_ratio(word, x) for x in words) / len(words)
+
+
+def fuzzy_max(words, dictionary):
+    """Goes through an dictionary and returns the word with the highest score."""
+    score = 0
+    word = ""
+
+    for x in dictionary:
+        temp = fuzzy_score(x, words)
+        if temp > score:
+            score = temp
+            word = x
+
+    return word, score
 
 
 def fuzzy_guess(words):
-    """Guesses a word depending on its score."""
+    """Guesses a word depending on its fuzzy score."""
     length = likely_length(words)
-    lower_words = [word.lower() for word in words]
+    lower = [word.lower() for word in words]
 
-    possible = []
-    for i in (-1, 0, 1):
-        possible.extend(dictionary_dict[length + i])
+    dictionary = []
+    for delta in (-1, 0, 1):
+        dictionary.extend(dictionary_dict[length + delta])
 
-    possible.sort(key=lambda x: fuzzy_score(x, lower_words), reverse=True)
+    word, score = fuzzy_max(lower, dictionary)
 
-    score = fuzzy_score(possible[0], lower_words)
+    word = words[0] if score < 75 else word
     mask = case_mask(words, length)
     
-    return apply_case_mask(words[0] if score < 75 else possible[0], mask)
+    return apply_case_mask(word, mask)
 
 
 def guess_word(words):

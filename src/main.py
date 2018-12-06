@@ -10,11 +10,16 @@ from model.train import train
 from model.test import test
 
 
+def seed(value):
+    """Seeds random generators for reproducible results."""
+    tf.set_random_seed(value)
+    np.random.seed(value)
+    random.seed(value)
+
+
 def main(argv):
     """Main function."""
-    tf.set_random_seed(0)
-    np.random.seed(0)
-    random.seed(0)
+    seed(0)
 
     args = argv[1:]
 

@@ -19,7 +19,7 @@ def load_model(json, weights):
     model.load_weights(weights)
 
     sgd = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
-    model.compile(sgd, loss="binary_crossentropy", metrics=['accuracy'])
+    model.compile(sgd, loss="binary_crossentropy", metrics=["accuracy"])
     
     return model
 
