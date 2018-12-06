@@ -12,9 +12,12 @@ Clone the directory:
 
 or download a release.
 
-Change into the download directory and install the required python packages:
+Download model.zip from https://github.com/jsmolka/tensor-ocr/releases and extract its contents into the src/data directory of the downloaded directory.
+
+Change into the downloaded directory and install the required python packages:
 
 ```pip install -r requirements.txt```
+
 
 ## How to use
 
